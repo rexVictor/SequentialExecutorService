@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * An API breaking implementation for ExecutorService.
  *
- * <p> Its purpose is to test functionality under non paraller condititons.
+ * <p>Its purpose is to test functionality under non parallel conditions.
  */
 public class SequentialExecutorService implements ExecutorService {
 
@@ -120,7 +120,7 @@ public class SequentialExecutorService implements ExecutorService {
             case IMMEDIATELY:
                 try {
                     runnable.run();
-                    return new SequentialFuture<Void>((Void) null);
+                    return new SequentialFuture<>((Void) null);
                 } catch (Exception e) {
                     return new SequentialFuture<Void>(e);
                 }
@@ -207,7 +207,7 @@ public class SequentialExecutorService implements ExecutorService {
     }
 
     /**
-     * Submits a task whill will never be run.
+     * Submits a task which will never be run.
      *
      * @param callable the task to never run
      * @return the future of this callable

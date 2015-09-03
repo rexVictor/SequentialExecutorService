@@ -66,14 +66,8 @@ public class SequentialScheduledExecutorService
     @Override
     public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command,
             long initialDelay, long delay, TimeUnit unit) {
-        for (int i = 0; i < callCount; i++) {
-            try {
-                command.run();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return null;
+        return new ImmediatelyScheduledFuture<Void>(callCount,
+                initialDelay, unit, () -> { command.run(); return null; });
     }
 
     /**

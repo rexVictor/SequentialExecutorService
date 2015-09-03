@@ -38,7 +38,7 @@ public class SequentialFuture<T> implements Future<T> {
     private final T result;
 
     /**
-     * The Exception which occured during the calculation.
+     * The Exception which occurred during the calculation.
      */
     private final Exception exception;
 
@@ -55,7 +55,7 @@ public class SequentialFuture<T> implements Future<T> {
     /**
      * Creates a new SequentialFuture.
      *
-     * @param exception the exception which happended during processing.
+     * @param exception the exception which happened during processing.
      */
     public SequentialFuture(Exception exception) {
         this.result = null;
