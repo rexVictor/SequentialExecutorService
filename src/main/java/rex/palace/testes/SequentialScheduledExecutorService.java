@@ -23,6 +23,7 @@
 package rex.palace.testes;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -67,7 +68,7 @@ public class SequentialScheduledExecutorService
     public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command,
             long initialDelay, long delay, TimeUnit unit) {
         return new ImmediatelyScheduledFuture<Void>(callCount,
-                initialDelay, unit, () -> { command.run(); return null; });
+                initialDelay, unit, Executors.callable(command, (Void) null));
     }
 
     /**

@@ -84,8 +84,8 @@ public class ImmediatelyScheduledFuture<T> implements ScheduledFuture<T> {
             try {
                 tempResult = callable.call();
                 tempException = null;
-            } catch (Throwable throwable) {
-                tempException = throwable;
+            } catch (Exception e) {
+                tempException = e;
                 tempResult = null;
                 done = true;
             }
