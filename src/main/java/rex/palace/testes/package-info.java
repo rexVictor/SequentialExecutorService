@@ -22,7 +22,7 @@
 
 /**
  * This package provides API breaking implementations of ExecutorService
- * and SchedudleExecutorService for testing purposes.
+ * and ScheduledExecutorService for testing purposes.
  *
  * <p>The implementations don't do the tasks parallel but sequential.
  */
