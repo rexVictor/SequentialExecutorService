@@ -22,26 +22,21 @@
 
 package rex.palace.testes;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 /**
  * A Future implementation for the SequentialExecutionService.
  * @param <T> the type this future holds.
  */
-public class NeverDoneFuture<T> implements Future<T> {
+public class NeverDoneFuture<T> extends SequentialFuture<T> {
 
     /**
      * Creates a new NeverDoneFuture.
-     *
      */
-    public NeverDoneFuture() {
-    }
-
-    @Override
-    public T get(long timeOut, TimeUnit unit) throws ExecutionException {
-        return get();
+    public NeverDoneFuture(Callable<T> callable) {
+        super(callable);
     }
 
     @Override
@@ -49,20 +44,6 @@ public class NeverDoneFuture<T> implements Future<T> {
         throw new ExecutionException("I am never done!", null);
     }
 
-    @Override
-    public boolean isDone() {
-        return false;
-    }
-
-    @Override
-    public boolean isCancelled() {
-        return false;
-    }
-
-    @Override
-    public boolean cancel(boolean interruptPossible) {
-        return false;
-    }
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 expandtab: */

@@ -22,44 +22,41 @@
 
 package rex.palace.testes;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.Objects;
+import java.util.concurrent.*;
 
 /**
  * A Future implementation for the SequentialExecutionService.
  * @param <T> the type this future holds.
  */
-public class SequentialFuture<T> implements Future<T> {
+public abstract class SequentialFuture<T> implements RunnableFuture<T> {
 
     /**
      * The result this future holds.
      */
-    private final T result;
+    private T result;
 
     /**
      * The Exception which occurred during the calculation.
      */
-    private final Exception exception;
+    private Exception exception;
+
+    /**
+     * The Callable creating this Future.
+     */
+    private final Callable<T> callable;
+
+    protected boolean cancelled = false;
+
+    protected boolean ran = false;
 
     /**
      * Creates a new SequentialFuture.
      *
      * @param result result to return
      */
-    public SequentialFuture(T result) {
-        this.result = result;
-        this.exception = null;
-    }
-
-    /**
-     * Creates a new SequentialFuture.
-     *
-     * @param exception the exception which happened during processing.
-     */
-    public SequentialFuture(Exception exception) {
-        this.result = null;
-        this.exception = exception;
+    public SequentialFuture(Callable<T> callable) {
+        this.callable = Objects.requireNonNull(callable);
     }
 
     @Override
@@ -76,18 +73,35 @@ public class SequentialFuture<T> implements Future<T> {
     }
 
     @Override
+    public void run() {
+        if (cancelled) {
+            throw new CancellationException();
+        }
+        ran = true;
+        try {
+            result = callable.call();
+        } catch (Exception e) {
+            exception = e;
+        }
+    }
+
+    @Override
     public boolean isDone() {
-        return true;
+        return ran || cancelled;
     }
 
     @Override
     public boolean isCancelled() {
-        return false;
+        return cancelled;
     }
 
     @Override
     public boolean cancel(boolean interruptPossible) {
-        return false;
+        if (cancelled || ran) {
+            return false;
+        }
+        cancelled = true;
+        return true;
     }
 }
 

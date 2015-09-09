@@ -27,9 +27,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * An API breaking implementation for ExecutorService.
@@ -37,25 +42,6 @@ import java.util.concurrent.TimeUnit;
  * <p>Its purpose is to test functionality under non parallel conditions.
  */
 public class SequentialExecutorService implements ExecutorService {
-
-    /**
-     * The state a SequentialExecutorService can be in.
-     */
-    public static enum ExecutorServiceState {
-        /**
-         * Performs submitted tasks immediately.
-         */
-        IMMEDIATELY,
-        /**
-         * Preforms submitted tasks when the get is called
-         * on the Future.
-         */
-        ONCALL,
-        /**
-         * Never performs the submitted tasks.
-         */
-        NEVER
-    }
 
     /**
      * Indicates if shutdown was called.
@@ -67,102 +53,139 @@ public class SequentialExecutorService implements ExecutorService {
      */
     private boolean shutdownNow = false;
 
+    private boolean isShutdown = false;
+
     /**
      * The state this ExecutorService is in.
      */
     private ExecutorServiceState state = ExecutorServiceState.IMMEDIATELY;
 
+    private List<RunnableFuture<?>> submittedTasks = new ArrayList<>();
+
     /**
      * The tasks which will be successfully run when calling shutdown().
      */
-    private final List<Callable<?>> onAwaitTerminatonSuccessfulTasks = new ArrayList<>();
-
-    /**
-     * The tasks which will be left over when calling shutdown().
-     */
-    private final List<Callable<?>> onAwaitTerminatonLeftOverTasks = new ArrayList<>();
+    private final List<RunnableFuture<?>> onAwaitTerminatonSuccessfulTasks = new ArrayList<>();
 
     /**
      * Creates a new SequentialExecutorService.
      */
     public SequentialExecutorService() {
+        super();
     }
 
     @Override
     public <T> T invokeAny(
             Collection<? extends Callable<T>> callables,
-            long timeOut, TimeUnit unit) {
-        throw new UnsupportedOperationException();
+            long timeOut, TimeUnit unit) throws ExecutionException, InterruptedException {
+        return invokeAny(callables);
     }
 
     @Override
     public <T> T invokeAny(
-            Collection<? extends Callable<T>> callables) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T> List<Future<T>> invokeAll(
-            Collection<? extends Callable<T>> callables,
-            long timeOut, TimeUnit unit) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T> List<Future<T>> invokeAll(
-            Collection<? extends Callable<T>> callables) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Future<?> submit(Runnable runnable) {
-        switch (state) {
-            case IMMEDIATELY:
-                try {
-                    runnable.run();
-                    return new SequentialFuture<>((Void) null);
-                } catch (Exception e) {
-                    return new SequentialFuture<Void>(e);
-                }
-            case NEVER:
-                return new NeverDoneFuture<Void>();
-            default:
-                throw new UnsupportedOperationException();
+            Collection<? extends Callable<T>> callables) throws InterruptedException, ExecutionException {
+        if (isShutdown) {
+            throw new RejectedExecutionException();
         }
+        return callables.stream().map(ImmediatelyFuture<T>::new).filter(Future::isDone).
+                filter(this::isRegularyDone).findAny().get().get();
+    }
+
+    private boolean isRegularyDone(Future<?> future) {
+        try {
+            future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public <T> List<Future<T>> invokeAll(
+            Collection<? extends Callable<T>> callables,
+            long timeOut, TimeUnit unit) {
+        return invokeAll(callables);
+    }
+
+    @Override
+    public <T> List<Future<T>> invokeAll(
+            Collection<? extends Callable<T>> callables) {
+        if (isShutdown) {
+            throw new RejectedExecutionException();
+        }
+        return callables.stream().map(ImmediatelyFuture<T>::new).collect(Collectors.toList());
+    }
+
+    @Override
+    public Future<Void> submit(Runnable runnable) {
+        return submit(convert(runnable), state);
+    }
+
+    private Callable<Void> convert(Runnable runnable) {
+        return convert(runnable, null);
+    }
+
+    private <T> Callable<T> convert(Runnable runnable, T result) {
+        return new Callable<T>() {
+            @Override
+            public T call() throws Exception {
+                runnable.run();
+                return result;
+            }
+        };
     }
 
     @Override
     public <T> Future<T> submit(Runnable runnable, T result) {
-        throw new UnsupportedOperationException();
+        return submit(convert(runnable, result), state);
     }
 
     @Override
     public <T> Future<T> submit(Callable<T> callable) {
-        throw new UnsupportedOperationException();
+        return submit(callable, state);
+    }
+
+    private <T> Future<T> submit(Callable<T> callable, ExecutorServiceState state) {
+        if (isShutdown) {
+            throw new RejectedExecutionException();
+        }
+        RunnableFuture<T> future = state.submit(callable);
+        submittedTasks.add(future);
+        return future;
     }
 
     @Override
     public List<Runnable> shutdownNow() {
         shutdownNow = true;
-        return new ArrayList<>();
+        isShutdown = true;
+        return notFinishedTasks().collect(Collectors.toList());
+    }
+
+    private Stream<? extends Runnable> notFinishedTasks() {
+        return submittedTasks.stream().filter(future -> !future.isDone());
     }
 
     @Override
     public void shutdown() {
         shutdown = true;
+        isShutdown = true;
     }
 
     @Override
     public boolean awaitTermination(long timeOut, TimeUnit unit)
                 throws InterruptedException {
-        for (Callable<?> callable : onAwaitTerminatonSuccessfulTasks) {
-            runCallable(callable);
+        if (!isShutdown) {
+            return false;
         }
-        return onAwaitTerminatonLeftOverTasks.isEmpty();
+        if (Thread.currentThread().isInterrupted()) {
+            throw new InterruptedException();
+        }
+        onAwaitTerminatonSuccessfulTasks.stream().forEach(this::getResult);
+        return notFinishedTasks().collect(Collectors.toList()).isEmpty();
     }
 
     /**
-     * Runs the callable and wraps thrown exception in RuntimeExceptions or
+     * Gets the future and wraps thrown exception in RuntimeExceptions or
      * rethrows them if they are InterruptedException.
      *
      * @param callable the callable to run
@@ -170,29 +193,30 @@ public class SequentialExecutorService implements ExecutorService {
      * @return the result of callable
      * @throws InterruptedException if callables throws one
      */
-    private <T> T runCallable(Callable<T> callable) throws InterruptedException {
+    private void getResult(Future<?> future) {
         try {
-            return callable.call();
-        } catch (InterruptedException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            future.get();
+        } catch (ExecutionException | InterruptedException expected) {
+            //expected
         }
     }
 
     @Override
     public boolean isTerminated() {
-        throw new UnsupportedOperationException();
+        if (!isShutdown) {
+            return false;
+        }
+        return notFinishedTasks().collect(Collectors.toList()).isEmpty();
     }
 
     @Override
     public boolean isShutdown() {
-        return shutdown;
+        return isShutdown;
     }
 
     @Override
     public void execute(Runnable runnable) {
-        throw new UnsupportedOperationException();
+        runnable.run();
     }
 
     /**
@@ -201,9 +225,10 @@ public class SequentialExecutorService implements ExecutorService {
      *
      * @return a future object which is accessible after awaitTermination() is called
      */
-    public Future<?> submitForTerminationInTime(Callable<?> callable) {
-        onAwaitTerminatonSuccessfulTasks.add(callable);
-        return null;
+    public <T> Future<T> submitForTerminationInTime(Callable<T> callable) {
+        RunnableFuture<T> future = ExecutorServiceState.ONCALL.submit(callable);
+        onAwaitTerminatonSuccessfulTasks.add(future);
+        return future;
     }
 
     /**
@@ -212,9 +237,8 @@ public class SequentialExecutorService implements ExecutorService {
      * @param callable the task to never run
      * @return the future of this callable
      */
-    public Future<?> submitForNotFishingOnTermination(Callable<?> callable) {
-        onAwaitTerminatonLeftOverTasks.add(callable);
-        return null;
+    public <T> Future<T> submitForNotFishingOnTermination(Callable<T> callable) {
+        return submit(callable, ExecutorServiceState.NEVER);
     }
 
     /**
@@ -227,6 +251,13 @@ public class SequentialExecutorService implements ExecutorService {
         this.state = Objects.requireNonNull(state);
     }
 
+    public boolean isShutdownNow() {
+        return shutdownNow;
+    }
+
+    public boolean isJustShutdown() {
+        return shutdown;
+    }
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 expandtab: */
