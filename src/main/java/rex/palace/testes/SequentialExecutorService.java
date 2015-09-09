@@ -53,6 +53,9 @@ public class SequentialExecutorService implements ExecutorService {
      */
     private boolean shutdownNow = false;
 
+    /**
+     * Indicates if this service has been shutdown.
+     */
     private boolean isShutdown = false;
 
     /**
@@ -60,6 +63,9 @@ public class SequentialExecutorService implements ExecutorService {
      */
     private ExecutorServiceState state = ExecutorServiceState.IMMEDIATELY;
 
+    /**
+     * A list of all submitted tasks.
+     */
     private List<RunnableFuture<?>> submittedTasks = new ArrayList<>();
 
     /**
@@ -82,16 +88,21 @@ public class SequentialExecutorService implements ExecutorService {
     }
 
     @Override
-    public <T> T invokeAny(
-            Collection<? extends Callable<T>> callables) throws InterruptedException, ExecutionException {
+    public <T> T invokeAny(Collection<? extends Callable<T>> callables)
+            throws InterruptedException, ExecutionException {
         if (isShutdown) {
             throw new RejectedExecutionException();
         }
-        return callables.stream().map(ImmediatelyFuture<T>::new).filter(Future::isDone).
-                filter(this::isRegularyDone).findAny().get().get();
+        return callables.stream().map(ImmediatelyFuture<T>::new).filter(Future::isDone)
+                .filter(this::isRegularlyDone).findAny().get().get();
     }
 
-    private boolean isRegularyDone(Future<?> future) {
+    /**
+     * Checks if future terminated regularly.
+     * @param future the future to test for regularly completion.
+     * @return false if and only if calling get() on future results in an exception.
+     */
+    private boolean isRegularlyDone(Future<?> future) {
         try {
             future.get();
         } catch (InterruptedException | ExecutionException e) {
@@ -116,15 +127,24 @@ public class SequentialExecutorService implements ExecutorService {
         return callables.stream().map(ImmediatelyFuture<T>::new).collect(Collectors.toList());
     }
 
-    @Override
-    public Future<Void> submit(Runnable runnable) {
-        return submit(convert(runnable), state);
-    }
-
+    /**
+     * Converts the Runnable to a Callable.
+     *
+     * @param runnable the runnable to convert
+     * @return a callable calling runnable
+     */
     private Callable<Void> convert(Runnable runnable) {
         return convert(runnable, null);
     }
 
+    /**
+     * Converts the Runnable to a Callable with specific result.
+     *
+     * @param runnable the runnable to convert
+     * @param result the result the callable shall return
+     * @param <T> the type of result
+     * @return a callable calling runnable and returning result
+     */
     private <T> Callable<T> convert(Runnable runnable, T result) {
         return new Callable<T>() {
             @Override
@@ -133,6 +153,11 @@ public class SequentialExecutorService implements ExecutorService {
                 return result;
             }
         };
+    }
+
+    @Override
+    public Future<Void> submit(Runnable runnable) {
+        return submit(convert(runnable), state);
     }
 
     @Override
@@ -145,11 +170,19 @@ public class SequentialExecutorService implements ExecutorService {
         return submit(callable, state);
     }
 
-    private <T> Future<T> submit(Callable<T> callable, ExecutorServiceState state) {
+    /**
+     * Submits the Callable according to the ExecutorServiceState.
+     *
+     * @param callable the callable to submit
+     * @param serviceState the serviceState defining how to submit
+     * @param <T> the type of callable
+     * @return a Future for callable
+     */
+    private <T> Future<T> submit(Callable<T> callable, ExecutorServiceState serviceState) {
         if (isShutdown) {
             throw new RejectedExecutionException();
         }
-        RunnableFuture<T> future = state.submit(callable);
+        RunnableFuture<T> future = serviceState.submit(callable);
         submittedTasks.add(future);
         return future;
     }
@@ -161,6 +194,11 @@ public class SequentialExecutorService implements ExecutorService {
         return notFinishedTasks().collect(Collectors.toList());
     }
 
+    /**
+     * Returns a stream of all unfinished tasks.
+     *
+     * @return a stream of all unfinished tasks.
+     */
     private Stream<? extends Runnable> notFinishedTasks() {
         return submittedTasks.stream().filter(future -> !future.isDone());
     }
@@ -185,13 +223,9 @@ public class SequentialExecutorService implements ExecutorService {
     }
 
     /**
-     * Gets the future and wraps thrown exception in RuntimeExceptions or
-     * rethrows them if they are InterruptedException.
+     * Makes sure that the calculations in future are done.
      *
-     * @param callable the callable to run
-     * @param <T> the type of callable
-     * @return the result of callable
-     * @throws InterruptedException if callables throws one
+     * @param future the Future to check
      */
     private void getResult(Future<?> future) {
         try {
@@ -221,8 +255,9 @@ public class SequentialExecutorService implements ExecutorService {
 
     /**
      * Submits a task for termination in time of calling awaitTermination().
-     * @param callable the task to be successfully executed on awaitTermination().
      *
+     * @param callable the task to be successfully executed on awaitTermination()
+     * @param <T> the type of callable
      * @return a future object which is accessible after awaitTermination() is called
      */
     public <T> Future<T> submitForTerminationInTime(Callable<T> callable) {
@@ -235,6 +270,7 @@ public class SequentialExecutorService implements ExecutorService {
      * Submits a task which will never be run.
      *
      * @param callable the task to never run
+     * @param <T> the type of callable
      * @return the future of this callable
      */
     public <T> Future<T> submitForNotFishingOnTermination(Callable<T> callable) {
@@ -251,10 +287,20 @@ public class SequentialExecutorService implements ExecutorService {
         this.state = Objects.requireNonNull(state);
     }
 
+    /**
+     * Returns if shutdownNow() has been called.
+     *
+     * @return true if and only if shutdownNow() has been called.
+     */
     public boolean isShutdownNow() {
         return shutdownNow;
     }
 
+    /**
+     * Returns if shutdown() has been called.
+     *
+     * @return true if and only if shutdown() has been called.
+     */
     public boolean isJustShutdown() {
         return shutdown;
     }

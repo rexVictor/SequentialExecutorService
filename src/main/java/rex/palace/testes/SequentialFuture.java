@@ -23,13 +23,27 @@
 package rex.palace.testes;
 
 import java.util.Objects;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.RunnableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A Future implementation for the SequentialExecutionService.
  * @param <T> the type this future holds.
  */
 public abstract class SequentialFuture<T> implements RunnableFuture<T> {
+
+    /**
+     * Indicates if this task has been cancelled.
+     */
+    protected boolean cancelled = false;
+
+    /**
+     * Indicates if this task has been run.
+     */
+    protected boolean ran = false;
 
     /**
      * The result this future holds.
@@ -46,14 +60,10 @@ public abstract class SequentialFuture<T> implements RunnableFuture<T> {
      */
     private final Callable<T> callable;
 
-    protected boolean cancelled = false;
-
-    protected boolean ran = false;
-
     /**
      * Creates a new SequentialFuture.
      *
-     * @param result result to return
+     * @param callable the task to run
      */
     public SequentialFuture(Callable<T> callable) {
         this.callable = Objects.requireNonNull(callable);

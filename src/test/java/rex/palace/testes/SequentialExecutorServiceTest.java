@@ -1,3 +1,25 @@
+/*
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This file is part of Robbie.
+ *
+ * Robbie is a 2d-adventure game.
+ * Copyright (C) 2015 Matthias Johannes Reimchen
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package rex.palace.testes;
 
 import org.testng.Assert;
@@ -5,24 +27,37 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import rex.palace.testhelp.TestThread;
 
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Created by rex on 9/8/15.
+ * Tests the SequentialExecutorService class.
  */
 public class SequentialExecutorServiceTest {
 
+    /**
+     * A SequentialExecutorService instance used by the tests.
+     */
     private SequentialExecutorService executorService;
 
+    /**
+     * Empty constructor.
+     */
     public SequentialExecutorServiceTest(){
     }
 
+    /**
+     * Initializes the instance variables.
+     */
     @BeforeMethod
     public void initializeInstanceVariables() {
         executorService = new SequentialExecutorService();
@@ -32,7 +67,8 @@ public class SequentialExecutorServiceTest {
     public void invokeAll_Callable() throws ExecutionException, InterruptedException {
         AtomicInteger count = new AtomicInteger(0);
         Callable<Integer> callable = () -> count.getAndIncrement();
-        List<Callable<Integer>> list = Stream.generate(() -> callable).limit(10).collect(Collectors.toList());
+        List<Callable<Integer>> list =
+                Stream.generate(() -> callable).limit(10).collect(Collectors.toList());
         List<Future<Integer>> futures = executorService.invokeAll(list, 0L, null);
 
         Assert.assertEquals(count.get(), 10);
@@ -46,14 +82,14 @@ public class SequentialExecutorServiceTest {
     public void invokeAll_Shutdown() throws ExecutionException, InterruptedException {
         Assert.assertFalse(executorService.isShutdown());
         executorService.shutdown();
-        executorService.invokeAll(Collections.EMPTY_SET);
+        executorService.invokeAll(new HashSet<>());
     }
 
     @Test(expectedExceptions = RejectedExecutionException.class)
     public void invokeAny_Shutdown() throws ExecutionException, InterruptedException {
         Assert.assertFalse(executorService.isShutdown());
         executorService.shutdown();
-        executorService.invokeAny(Collections.EMPTY_SET);
+        executorService.invokeAny(new HashSet<>());
     }
 
     @Test(expectedExceptions = RejectedExecutionException.class)
@@ -67,7 +103,8 @@ public class SequentialExecutorServiceTest {
     public void invokeAny_Callable() throws ExecutionException, InterruptedException {
         AtomicInteger count = new AtomicInteger(0);
         Callable<Integer> callable = () -> count.getAndIncrement();
-        List<Callable<Integer>> list = Stream.generate(() -> callable).limit(10).collect(Collectors.toList());
+        List<Callable<Integer>> list =
+                Stream.generate(() -> callable).limit(10).collect(Collectors.toList());
         Integer result = executorService.invokeAny(list, 0L, null);
 
         Assert.assertEquals(count.get(), 1);
@@ -77,10 +114,11 @@ public class SequentialExecutorServiceTest {
     public void invokeAny_Callable_Exception() throws ExecutionException, InterruptedException {
         AtomicInteger count = new AtomicInteger(0);
         Callable<Integer> callable = () -> count.getAndIncrement();
-        List<Callable<Integer>> list = Stream.generate(() -> callable).limit(10).collect(Collectors.toList());
+        List<Callable<Integer>> list =
+                Stream.generate(() -> callable).limit(10).collect(Collectors.toList());
         list.add(0, () -> {
-            throw new Exception();
-        });
+                throw new Exception();
+            });
         Integer result = executorService.invokeAny(list, 0L, null);
 
         Assert.assertEquals(count.get(), 1);
@@ -105,7 +143,8 @@ public class SequentialExecutorServiceTest {
     }
 
     @Test
-    public void submit_Runnable_Result_immediately() throws ExecutionException, InterruptedException {
+    public void submit_Runnable_Result_immediately()
+            throws ExecutionException, InterruptedException {
         executorService.setState(ExecutorServiceState.IMMEDIATELY);
         Future<Boolean> future = executorService.submit(() -> { }, false);
         Assert.assertTrue(future.isDone());
@@ -120,7 +159,7 @@ public class SequentialExecutorServiceTest {
         Assert.assertTrue(future.isDone());
         try {
             future.get();
-        } catch (ExecutionException e){
+        } catch (ExecutionException e) {
             throw e.getCause();
         }
     }
@@ -142,7 +181,7 @@ public class SequentialExecutorServiceTest {
         Assert.assertFalse(future.isDone());
         try {
             future.get();
-        } catch (ExecutionException e){
+        } catch (ExecutionException e) {
             throw e.getCause();
         }
     }
@@ -167,9 +206,9 @@ public class SequentialExecutorServiceTest {
     public void shutdownNow() {
         Callable<Void> callable = () -> null;
         List<Future<Void>> futures =
-                Stream.generate(() -> callable).limit(10).
-                        map(executorService::submitForNotFishingOnTermination).
-                        collect(Collectors.toList());
+                Stream.generate(() -> callable).limit(10)
+                        .map(executorService::submitForNotFishingOnTermination)
+                        .collect(Collectors.toList());
         List<Runnable> runnables = executorService.shutdownNow();
 
         Assert.assertTrue(executorService.isShutdown());
@@ -189,12 +228,11 @@ public class SequentialExecutorServiceTest {
     }
 
     @Test
-    public void shutdownNow_Finsished() {
+    public void shutdownNow_Finished() {
         Callable<Void> callable = () -> null;
         List<Future<Void>> futures =
-                Stream.generate(() -> callable).limit(10).
-                        map(executorService::submit).
-                        collect(Collectors.toList());
+                Stream.generate(() -> callable).limit(10).map(executorService::submit)
+                        .collect(Collectors.toList());
         List<Runnable> runnables = executorService.shutdownNow();
         Assert.assertTrue(executorService.isShutdownNow());
         Assert.assertFalse(executorService.isJustShutdown());
@@ -250,8 +288,10 @@ public class SequentialExecutorServiceTest {
     }
 
     @Test(expectedExceptions = ExecutionException.class)
-    public void awaitTermination_inTime_Exception() throws InterruptedException, ExecutionException {
-        Future<Integer> future = executorService.submitForTerminationInTime(() -> { throw new Exception(); });
+    public void awaitTermination_inTime_Exception()
+            throws InterruptedException, ExecutionException {
+        Future<Integer> future =
+                executorService.submitForTerminationInTime(() -> { throw new Exception(); });
         executorService.shutdown();
         Assert.assertFalse(future.isDone());
         executorService.awaitTermination(1L, null);
@@ -266,3 +306,5 @@ public class SequentialExecutorServiceTest {
     }
 
 }
+
+/* vim:set shiftwidth=4 softtabstop=4 expandtab: */

@@ -24,7 +24,6 @@ package rex.palace.testes;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 /**
  * A Future implementation for the SequentialExecutionService.
@@ -34,6 +33,7 @@ public class NeverDoneFuture<T> extends SequentialFuture<T> {
 
     /**
      * Creates a new NeverDoneFuture.
+     * @param callable the callable to never run
      */
     public NeverDoneFuture(Callable<T> callable) {
         super(callable);
