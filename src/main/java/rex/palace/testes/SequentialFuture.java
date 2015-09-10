@@ -46,14 +46,14 @@ public abstract class SequentialFuture<T> implements RunnableFuture<T> {
     protected boolean ran = false;
 
     /**
+     * The Exception which occurred during the calculation.
+     */
+    protected Exception exception;
+
+    /**
      * The result this future holds.
      */
     private T result;
-
-    /**
-     * The Exception which occurred during the calculation.
-     */
-    private Exception exception;
 
     /**
      * The Callable creating this Future.
@@ -70,12 +70,15 @@ public abstract class SequentialFuture<T> implements RunnableFuture<T> {
     }
 
     @Override
-    public T get(long timeOut, TimeUnit unit) throws ExecutionException {
+    public T get(long timeOut, TimeUnit unit) throws ExecutionException, InterruptedException {
         return get();
     }
 
     @Override
-    public T get() throws ExecutionException {
+    public T get() throws ExecutionException, InterruptedException {
+        if (Thread.currentThread().isInterrupted()) {
+            throw new InterruptedException();
+        }
         if (exception == null) {
             return result;
         }

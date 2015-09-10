@@ -15,36 +15,32 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package rex.palace.testes;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.RunnableFuture;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
- * This is a Future, which performs the task it is constructed with when get() is called.
+ * A ScheduledFuture which does not run parallel.
  *
- * @param <V> the result type of this Future
+ * @param <T> the return type of this Future
  */
-public class OnCallFuture<V> extends SequentialFuture<V> {
+public interface SequentialScheduledFuture<T> extends RunnableFuture<T>, ScheduledFuture<T> {
 
     /**
-     * Creates a new OnCallFuture.
-     * @param callable the callable to run when get() is called.
+     * Notifies this task about passed time. It simulates real passed time for
+     * testing purposes.
+     *
+     * @param time the amount of time that has been passed
+     * @param unit the TimeUnit of time
      */
-    public OnCallFuture(Callable<V> callable) {
-        super(callable);
-    }
-
-    @Override
-    public V get() throws ExecutionException, InterruptedException {
-        run();
-        return super.get();
-    }
+    void timePassed(long time, TimeUnit unit);
 
 }
 

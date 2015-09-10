@@ -15,7 +15,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -23,27 +23,35 @@
 package rex.palace.testes;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 /**
- * This is a Future, which performs the task it is constructed with when get() is called.
+ * SequentialPeriodicFuture represents a ScheduledFuture which
+ * gets executed a number of times immediately on creation.
  *
- * @param <V> the result type of this Future
+ * @param <T> the return type
  */
-public class OnCallFuture<V> extends SequentialFuture<V> {
+public class SequentialPeriodicFuture<T> extends AbstractSequentialScheduledFuture<T> {
 
     /**
-     * Creates a new OnCallFuture.
-     * @param callable the callable to run when get() is called.
+     * Creates a new SequentialPeriodicFuture.
+     *
+     * @param callable the callable to execute
+     * @param period the time to wait
+     * @param timeUnit the unit of period
      */
-    public OnCallFuture(Callable<V> callable) {
-        super(callable);
+    public SequentialPeriodicFuture(Callable<T> callable, long period, TimeUnit timeUnit) {
+        super(callable, period, timeUnit);
     }
 
     @Override
-    public V get() throws ExecutionException, InterruptedException {
-        run();
-        return super.get();
+    public void timePassed(long time, TimeUnit unit) {
+        long timeInNanos = unit.toNanos(time);
+        remainingDelay -= timeInNanos;
+        while (remainingDelay <= 0) {
+            run();
+            remainingDelay += initialDelay;
+        }
     }
 
 }

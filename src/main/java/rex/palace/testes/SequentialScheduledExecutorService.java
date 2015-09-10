@@ -22,6 +22,8 @@
 
 package rex.palace.testes;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -36,26 +38,29 @@ public class SequentialScheduledExecutorService
          implements ScheduledExecutorService {
 
     /**
-     * How often periodic tasks are executed.
+     * All tasks scheduled by this ExecutorService.
      */
-    private int callCount = 0;
+    private final List<SequentialScheduledFuture<?>> scheduledTasks = new ArrayList<>();
 
     /**
      * Creates a new SequentialScheduledExecutorService.
      */
     public SequentialScheduledExecutorService() {
+        super();
     }
 
     @Override
     public <V> ScheduledFuture<V> schedule(Callable<V> callable,
             long delay, TimeUnit unit) {
-        return null;
+        SequentialScheduledFuture<V> future = new DelayedSequentialFuture<>(callable, delay, unit);
+        scheduledTasks.add(future);
+        return future;
     }
 
     @Override
     public ScheduledFuture<?> schedule(Runnable command,
             long delay, TimeUnit unit) {
-        return null;
+        return schedule(Executors.callable(command), delay, unit);
     }
 
     @Override
@@ -67,21 +72,22 @@ public class SequentialScheduledExecutorService
     @Override
     public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command,
             long initialDelay, long delay, TimeUnit unit) {
-        return new ImmediatelyScheduledFuture<Void>(callCount,
-                initialDelay, unit, Executors.callable(command, (Void) null));
+        SequentialScheduledFuture<Object> future
+                = new DelayedPeriodicSequentialFuture<Object>(
+                Executors.callable(command), initialDelay, delay, unit);
+        scheduledTasks.add(future);
+        return future;
     }
 
     /**
-     * Sets the count how often periodic schedules are called.
+     * Notifies the tasks scheduled by this ExecutorService about passed time.
+     * It simulates real passed time for testing purposes.
      *
-     * @param callCount how often periodic schedules are called
-     * @throws IllegalArgumentException if callCount is negative
+     * @param time the amount of time that has been passed
+     * @param unit the TimeUnit of time
      */
-    public void setCallCount(int callCount) {
-        if (callCount < 0) {
-            throw new IllegalArgumentException();
-        }
-        this.callCount = callCount;
+    public void timePassed(long time, TimeUnit unit) {
+        scheduledTasks.stream().forEach(future -> future.timePassed(time, unit));
     }
 
 

@@ -15,7 +15,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -23,27 +23,36 @@
 package rex.palace.testes;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 /**
- * This is a Future, which performs the task it is constructed with when get() is called.
+ * A Future which is run after an initial delay.
  *
- * @param <V> the result type of this Future
+ * @param <T> the return type of this Future.
  */
-public class OnCallFuture<V> extends SequentialFuture<V> {
+public class DelayedSequentialFuture<T> extends AbstractSequentialScheduledFuture<T> {
 
     /**
-     * Creates a new OnCallFuture.
-     * @param callable the callable to run when get() is called.
+     * Creates a new SequentialFuture.
+     *
+     * @param callable the task to run
+     * @param initialDelay the delay before this task is run
+     * @param unit the unit of initialDelay
      */
-    public OnCallFuture(Callable<V> callable) {
-        super(callable);
+    public DelayedSequentialFuture(Callable<T> callable, long initialDelay, TimeUnit unit) {
+        super(callable, initialDelay, unit);
     }
 
     @Override
-    public V get() throws ExecutionException, InterruptedException {
-        run();
-        return super.get();
+    public void timePassed(long time, TimeUnit unit) {
+        if (remainingDelay < 0) {
+            return;
+        }
+        long passedInNanos = unit.toNanos(time);
+        remainingDelay -= passedInNanos;
+        if (remainingDelay <= 0 ) {
+            run();
+        }
     }
 
 }
