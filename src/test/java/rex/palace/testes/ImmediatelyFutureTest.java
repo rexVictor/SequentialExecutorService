@@ -24,6 +24,7 @@ package rex.palace.testes;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import rex.palace.testhelp.TestThread;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -64,6 +65,21 @@ public class ImmediatelyFutureTest {
         Assert.assertFalse(future.isCancelled());
         Assert.assertFalse(future.cancel(false));
         Assert.assertSame(future.get(1L, null), null);
+    }
+
+    @Test(expectedExceptions = InterruptedException.class)
+    public void get_interrupted() throws Exception {
+        ImmediatelyFuture<Void> future = new ImmediatelyFuture<>(() -> null);
+        TestThread thread = new TestThread(new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                Thread.currentThread().interrupt();
+                return future.get();
+            }
+        });
+        thread.start();
+        thread.join();
+        thread.finish();
     }
 
 }
