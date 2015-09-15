@@ -15,43 +15,45 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package rex.palace.testes;
+package rex.palace.testes.scheduled;
 
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 /**
- * SequentialPeriodicFuture represents a ScheduledFuture which
- * gets executed a number of times immediately on creation.
- *
- * @param <T> the return type
+ * A NOOP implementation of TimeController.
  */
-public class SequentialPeriodicFuture<T> extends AbstractSequentialScheduledFuture<T> {
+public final class NopTimeController implements TimeController {
 
     /**
-     * Creates a new SequentialPeriodicFuture.
-     *
-     * @param callable the callable to execute
-     * @param period the time to wait
-     * @param timeUnit the unit of period
+     * Singleton instance of the NopTimeController.
      */
-    public SequentialPeriodicFuture(Callable<T> callable, long period, TimeUnit timeUnit) {
-        super(callable, period, timeUnit);
+    public static final NopTimeController nopController = new NopTimeController();
+
+    /**
+     * Creates a new NopTimeController.
+     */
+    private NopTimeController() {
+        super();
     }
 
     @Override
-    public void timePassed(long time, TimeUnit unit) {
-        long timeInNanos = unit.toNanos(time);
-        remainingDelay -= timeInNanos;
-        while (remainingDelay <= 0) {
-            run();
-            remainingDelay += initialDelay;
-        }
+    public void letTimePass(long time, TimeUnit unit) {
+        //does nothing
+    }
+
+    @Override
+    public void register(TimeListener listener) {
+        //does nothing
+    }
+
+    @Override
+    public void unregister(TimeListener listener) {
+        //does nothing
     }
 
 }

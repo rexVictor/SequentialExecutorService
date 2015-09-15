@@ -15,107 +15,51 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package rex.palace.testes;
 
-import java.util.Objects;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.RunnableFuture;
-import java.util.concurrent.TimeUnit;
 
 /**
- * A Future implementation for the SequentialExecutionService.
- * @param <T> the type this future holds.
+ * An extension of RunnableFuture used for testing under non parallel conditions.
+ *
+ * @param <T> the type of the result
  */
-public abstract class SequentialFuture<T> implements RunnableFuture<T> {
+public interface SequentialFuture<T> extends RunnableFuture<T> {
 
     /**
-     * Indicates if this task has been cancelled.
+     * Returns if this task has already been run.
+     * @return true if and only if has been run.
      */
-    protected boolean cancelled = false;
+    boolean hasRun();
 
     /**
-     * Indicates if this task has been run.
+     * Returns if an exception occurred during the run.
+     * @return false if this task has never been run or has
+     *         been run without exceptions and true otherwise
      */
-    protected boolean ran = false;
+    boolean didExceptionHappen();
 
     /**
-     * The Exception which occurred during the calculation.
-     */
-    protected Exception exception;
-
-    /**
-     * The result this future holds.
-     */
-    private T result;
-
-    /**
-     * The Callable creating this Future.
-     */
-    private final Callable<T> callable;
-
-    /**
-     * Creates a new SequentialFuture.
+     * Callback method used by {@link CallableWrapper}, which is
+     * called if an exception occurred during the run.
      *
-     * @param callable the task to run
+     * @param exception the exception which occurred. It is never null.
      */
-    public SequentialFuture(Callable<T> callable) {
-        this.callable = Objects.requireNonNull(callable);
-    }
+    void setException(Exception exception);
 
-    @Override
-    public T get(long timeOut, TimeUnit unit) throws ExecutionException, InterruptedException {
-        return get();
-    }
+    /**
+     * Callback method used by {@link CallableWrapper}, which is
+     * called if the run was successful.
+     *
+     * @param result the result of this task
+     */
+    void setResult(T result);
 
-    @Override
-    public T get() throws ExecutionException, InterruptedException {
-        if (Thread.currentThread().isInterrupted()) {
-            throw new InterruptedException();
-        }
-        if (exception == null) {
-            return result;
-        }
-        throw new ExecutionException(exception);
-    }
-
-    @Override
-    public void run() {
-        if (cancelled) {
-            throw new CancellationException();
-        }
-        ran = true;
-        try {
-            result = callable.call();
-        } catch (Exception e) {
-            exception = e;
-        }
-    }
-
-    @Override
-    public boolean isDone() {
-        return ran || cancelled;
-    }
-
-    @Override
-    public boolean isCancelled() {
-        return cancelled;
-    }
-
-    @Override
-    public boolean cancel(boolean interruptPossible) {
-        if (cancelled || ran) {
-            return false;
-        }
-        cancelled = true;
-        return true;
-    }
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 expandtab: */

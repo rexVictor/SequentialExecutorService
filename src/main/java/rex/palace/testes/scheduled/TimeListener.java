@@ -20,12 +20,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+package rex.palace.testes.scheduled;
+
+import java.util.concurrent.TimeUnit;
+
 /**
- * This package provides API breaking implementations of ExecutorService
- * for testing purposes.
- *
- * <p>The implementations don't do the tasks parallel but sequential.
+ * Classes implementing this interface can register to {@link TimeController} and
+ * get notified if simulated time passed.
  */
-package rex.palace.testes;
+interface TimeListener {
+
+    /**
+     * Callback method when time passed.
+     *
+     * @param time the simulated amount of time that has passed
+     * @param unit the TimeUnit of time
+     * @return if this TimeListener shall be unregistered of the calling TimeController
+     * @throws NullPointerException if unit is null
+     */
+    boolean timePassed(long time, TimeUnit unit);
+
+}
 
 /* vim:set shiftwidth=4 softtabstop=4 expandtab: */

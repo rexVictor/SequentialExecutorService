@@ -29,7 +29,7 @@ import java.util.concurrent.ExecutionException;
  * A Future implementation for the SequentialExecutionService.
  * @param <T> the type this future holds.
  */
-public class NeverDoneFuture<T> extends SequentialFuture<T> {
+public class NeverDoneFuture<T> extends AbstractSequentialFuture<T> {
 
     /**
      * Creates a new NeverDoneFuture.

@@ -20,7 +20,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package rex.palace.testes;
+package rex.palace.testes.scheduled;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -33,26 +33,29 @@ import java.util.concurrent.TimeUnit;
 public class DelayedSequentialFuture<T> extends AbstractSequentialScheduledFuture<T> {
 
     /**
-     * Creates a new SequentialFuture.
+     * Creates a new DelayedSequentialFuture.
      *
      * @param callable the task to run
-     * @param initialDelay the delay before this task is run
-     * @param unit the unit of initialDelay
+     * @param initialDelay the initial delay to wait
+     * @param unit the TimeUnit of initialDelay
+     * @param timeController the timeController to register to
+     * @throws NullPointerException if callable, unit or timeController is null
+     * @throws IllegalArgumentException if initialDelay is not positive
      */
-    public DelayedSequentialFuture(Callable<T> callable, long initialDelay, TimeUnit unit) {
-        super(callable, initialDelay, unit);
+    public DelayedSequentialFuture(
+            Callable<T> callable, long initialDelay,
+            TimeUnit unit, TimeController timeController) {
+        super(callable, initialDelay, unit, timeController);
     }
 
     @Override
-    public void timePassed(long time, TimeUnit unit) {
-        if (remainingDelay < 0) {
-            return;
-        }
-        long passedInNanos = unit.toNanos(time);
-        remainingDelay -= passedInNanos;
-        if (remainingDelay <= 0 ) {
+    public boolean timePassed(long time, TimeUnit unit) {
+        super.timePassed(time, unit);
+        if (remainingDelay <= 0) {
             run();
+            return true;
         }
+        return false;
     }
 
 }

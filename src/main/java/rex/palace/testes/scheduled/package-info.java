@@ -21,11 +21,12 @@
  */
 
 /**
- * This package provides API breaking implementations of ExecutorService
+ * This package provides API breaking implementations of ScheduledExecutorService
  * for testing purposes.
  *
  * <p>The implementations don't do the tasks parallel but sequential.
  */
-package rex.palace.testes;
+package rex.palace.testes.scheduled;
 
 /* vim:set shiftwidth=4 softtabstop=4 expandtab: */
+

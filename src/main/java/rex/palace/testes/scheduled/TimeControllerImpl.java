@@ -15,33 +15,52 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package rex.palace.testes.scheduled;
 
-import rex.palace.testes.SequentialFuture;
-
+import java.util.HashSet;
 import java.util.Objects;
-import java.util.concurrent.Delayed;
-import java.util.concurrent.ScheduledFuture;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
- * A ScheduledFuture which does not run parallel.
- *
- * @param <T> the return type of this Future
+ * Created by rex on 9/11/15.
  */
-public interface SequentialScheduledFuture<T>
-        extends SequentialFuture<T>, ScheduledFuture<T>, TimeListener {
+public class TimeControllerImpl implements TimeController {
+
+    /**
+     * The registered TimeListeners.
+     */
+    private final Set<TimeListener> listeners = new HashSet<>();
+
+    /**
+     * Creates a new TimeController.
+     */
+    public TimeControllerImpl() {
+        super();
+    }
 
     @Override
-    default int compareTo(Delayed other) {
-        Objects.requireNonNull(other);
-        long diff = getDelay(TimeUnit.NANOSECONDS) - other.getDelay(TimeUnit.NANOSECONDS);
-        return diff < 0 ? -1 : diff > 0 ? 1 : 0;
+    public void letTimePass(long time, TimeUnit unit) {
+        listeners.removeAll(
+                listeners.stream().filter(
+                        listener -> listener.timePassed(time, unit)
+                ).collect(Collectors.toSet()));
+    }
+
+    @Override
+    public void register(TimeListener listener) {
+        listeners.add(Objects.requireNonNull(listener));
+    }
+
+    @Override
+    public void unregister(TimeListener listener) {
+        listeners.remove(Objects.requireNonNull(listener));
     }
 
 }

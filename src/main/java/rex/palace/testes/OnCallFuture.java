@@ -30,7 +30,7 @@ import java.util.concurrent.ExecutionException;
  *
  * @param <V> the result type of this Future
  */
-public class OnCallFuture<V> extends SequentialFuture<V> {
+public class OnCallFuture<V> extends AbstractSequentialFuture<V> {
 
     /**
      * Creates a new OnCallFuture.
