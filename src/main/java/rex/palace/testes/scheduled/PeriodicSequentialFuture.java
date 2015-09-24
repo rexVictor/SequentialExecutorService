@@ -64,7 +64,6 @@ public class PeriodicSequentialFuture<T> extends AbstractSequentialScheduledFutu
     @Override
     public boolean timePassed(long time, TimeUnit unit) {
         super.timePassed(time, unit);
-        // while (delay <= 0)
         long delay;
         while ((delay = getDelay(TimeUnit.NANOSECONDS)) <= 0) {
             run();
