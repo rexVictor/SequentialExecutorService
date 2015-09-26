@@ -26,6 +26,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -66,6 +67,18 @@ public class SequentialScheduledExecutorServiceTest {
 
         Assert.assertTrue(future instanceof DelayedSequentialFuture);
         Assert.assertEquals(future.getDelay(TimeUnit.NANOSECONDS), 10L);
+    }
+
+    @Test(expectedExceptions = RejectedExecutionException.class)
+    public void schedule_Callable_shutdown() {
+        service.shutdown();
+        service.schedule(() -> null, 10L, TimeUnit.NANOSECONDS);
+    }
+
+    @Test(expectedExceptions = RejectedExecutionException.class)
+    public void schedule_Runnable_shutdown() {
+        service.shutdown();
+        service.schedule(() -> { }, 10L, TimeUnit.NANOSECONDS);
     }
 
     @Test
@@ -114,6 +127,18 @@ public class SequentialScheduledExecutorServiceTest {
         timeController.letTimePass(5L, TimeUnit.NANOSECONDS);
 
         Assert.assertEquals(future.getDelay(TimeUnit.NANOSECONDS), 10L);
+    }
+
+    @Test(expectedExceptions = RejectedExecutionException.class)
+    public void scheduleWithFixedDelay_shutdown() {
+        service.shutdown();
+        service.scheduleWithFixedDelay(() -> { }, 5L, 10L, TimeUnit.NANOSECONDS);
+    }
+
+    @Test(expectedExceptions = RejectedExecutionException.class)
+    public void scheduleAtFixedRate_shutdown() {
+        service.shutdown();
+        service.scheduleAtFixedRate(() -> { }, 5L, 10L, TimeUnit.NANOSECONDS);
     }
 
 }

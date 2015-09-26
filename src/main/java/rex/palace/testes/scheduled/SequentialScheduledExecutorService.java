@@ -27,11 +27,7 @@ import rex.palace.testes.SequentialExecutorService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * An API breaking implementation of ScheduledExecutorService.
@@ -64,6 +60,9 @@ public class SequentialScheduledExecutorService
     @Override
     public <V> ScheduledFuture<V> schedule(Callable<V> callable,
             long delay, TimeUnit unit) {
+        if (isShutdown()) {
+            throw new RejectedExecutionException();
+        }
         SequentialScheduledFuture<V> future
                 = new DelayedSequentialFuture<>(callable, delay,
                 unit, timeController);
@@ -86,6 +85,9 @@ public class SequentialScheduledExecutorService
     @Override
     public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command,
             long initialDelay, long delay, TimeUnit unit) {
+        if (isShutdown()) {
+            throw new RejectedExecutionException();
+        }
         SequentialScheduledFuture<Object> future;
         if (initialDelay == 0L) {
             future = new PeriodicSequentialFuture<>(
