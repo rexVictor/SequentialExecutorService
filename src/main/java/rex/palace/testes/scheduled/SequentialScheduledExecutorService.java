@@ -1,9 +1,10 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
- * This file is part of Robbie.
+ * This file is part of SequentialExecutorService.
  *
- * Robbie is a 2d-adventure game.
+ * SequentialExecutorService contains non-parallel implementations
+ * for Java's ExecutorService and ScheduledExecutorService.
  * Copyright (C) 2015 Matthias Johannes Reimchen
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,7 +16,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -27,7 +28,12 @@ import rex.palace.testes.SequentialExecutorService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * An API breaking implementation of ScheduledExecutorService.

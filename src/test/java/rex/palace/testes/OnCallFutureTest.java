@@ -1,9 +1,10 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
- * This file is part of Robbie.
+ * This file is part of SequentialExecutorService.
  *
- * Robbie is a 2d-adventure game.
+ * SequentialExecutorService contains non-parallel implementations
+ * for Java's ExecutorService and ScheduledExecutorService.
  * Copyright (C) 2015 Matthias Johannes Reimchen
  *
  * This program is free software: you can redistribute it and/or modify
@@ -32,7 +33,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
 /**
- * Created by rex on 9/8/15.
+ * Tests the OnCallFuture class.
  */
 public class OnCallFutureTest {
 

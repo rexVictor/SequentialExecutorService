@@ -5,7 +5,7 @@
  *
  * SequentialExecutorService contains non-parallel implementations
  * for Java's ExecutorService and ScheduledExecutorService.
- * Copyright (C) 2015 Matthias Johannes Reimchen
+ * Copyright \(C\) \d\d\d\d .*
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,31 +20,3 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-package rex.palace.testes;
-
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-
-/**
- * A Future implementation for the SequentialExecutionService.
- * @param <T> the type this future holds.
- */
-public class NeverDoneFuture<T> extends AbstractSequentialFuture<T> {
-
-    /**
-     * Creates a new NeverDoneFuture.
-     * @param callable the callable to never run
-     */
-    public NeverDoneFuture(Callable<T> callable) {
-        super(callable);
-    }
-
-    @Override
-    public T get() throws ExecutionException {
-        throw new ExecutionException("I am never done!", null);
-    }
-
-}
-
-/* vim:set shiftwidth=4 softtabstop=4 expandtab: */
