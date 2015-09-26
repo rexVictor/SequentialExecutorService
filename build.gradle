@@ -3,6 +3,12 @@ plugins {
 }
 apply plugin : 'java'
 apply plugin : 'jacoco'
+apply plugin : 'maven'
+
+group = 'com.github.rexVictor'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 jacoco {
     toolVersion = "0.7.5.201505241946"
@@ -34,6 +40,20 @@ test {
     jacoco {
         destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
     }
+}
+
+install {
+  repositories.mavenInstaller {
+    pom.project {
+      licenses {
+        license {
+          name 'The GNU General Public License, Version 3.0'
+          url 'http://www.gnu.org/licenses/gpl-3.0.txt'
+          distribution 'repo'
+        }
+      }
+    }
+  }
 }
 
 // vim:set shiftwidth=4 softtabstop=4 expandtab:
