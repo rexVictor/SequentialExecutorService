@@ -81,6 +81,12 @@ public class SequentialExecutorService implements ExecutorService {
         super();
     }
 
+    /**
+     * Does nothing if this service has not yet shutdown and throws
+     * an RejectedExecutionException otherwise.
+     *
+     * @throws RejectedExecutionException if this service is shutdown.
+     */
     protected final void checkIfTaskMayBeSubmitted() {
         if (isShutdown()) {
             throw new RejectedExecutionException(

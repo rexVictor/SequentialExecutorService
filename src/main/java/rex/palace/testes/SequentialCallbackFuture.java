@@ -34,19 +34,6 @@ interface SequentialCallbackFuture<T> extends SequentialFuture<T>,
         RunnableFuture<T> {
 
     /**
-     * Returns if this task has already been run.
-     * @return true if and only if has been run.
-     */
-    boolean hasRun();
-
-    /**
-     * Returns if an exception occurred during the run.
-     * @return false if this task has never been run or has
-     *         been run without exceptions and true otherwise
-     */
-    boolean didExceptionHappen();
-
-    /**
      * Callback method used by {@link CallableWrapper}, which is
      * called if an exception occurred during the run.
      *

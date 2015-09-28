@@ -102,14 +102,38 @@ final class SequentialFutures {
                 callable, initialDelay, period, timeUnit, timeController);
     }
 
+    /**
+     * Returns a Future which will have done its task.
+     *
+     * @param callable the task to execute
+     * @param <T> the return type of callable
+     * @return a Future containing the result of callable
+     * @throws NullPointerException if callable is null
+     */
     static <T> SequentialCallbackFuture<T> getImmediately(Callable<T> callable) {
         return new ImmediatelyFuture<>(callable);
     }
 
+    /**
+     * Returns a Future which will run its task after get() is called.
+     *
+     * @param callable the task to execute
+     * @param <T> the return type of callable
+     * @return a Future running callable when get() is called
+     * @throws NullPointerException if callable is null
+     */
     static <T> SequentialCallbackFuture<T> getOnCall(Callable<T> callable) {
         return new OnCallFuture<>(callable);
     }
 
+    /**
+     * Returns a Future which will be never run.
+     *
+     * @param callable the task that will never be executed
+     * @param <T> the return type of callable
+     * @return a Future which will never be ready
+     * @throws NullPointerException if callable is null
+     */
     static <T> SequentialCallbackFuture<T> getNeverDone(Callable<T> callable) {
         return new NeverDoneFuture<>(callable);
     }

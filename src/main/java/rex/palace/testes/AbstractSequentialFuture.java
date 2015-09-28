@@ -67,7 +67,7 @@ abstract class AbstractSequentialFuture<T>
      * @param callable the task to run
      * @throws NullPointerException if callable is null
      */
-    public AbstractSequentialFuture(Callable<T> callable) {
+    AbstractSequentialFuture(Callable<T> callable) {
         wrapper = new CallableWrapper<>(this, callable);
     }
 
