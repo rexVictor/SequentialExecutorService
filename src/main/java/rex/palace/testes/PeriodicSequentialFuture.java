@@ -21,9 +21,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package rex.palace.testes.scheduled;
+package rex.palace.testes;
 
-import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -35,7 +34,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @param <T> the return type
  */
-public class PeriodicSequentialFuture<T> extends AbstractSequentialScheduledFuture<T> {
+class PeriodicSequentialFuture<T> extends AbstractSequentialScheduledFuture<T> {
 
     /**
      * The period in nano seconds, after which this task gets run.
@@ -52,14 +51,11 @@ public class PeriodicSequentialFuture<T> extends AbstractSequentialScheduledFutu
      * @throws NullPointerException if callable, timeUnit or timeController is null
      * @throws IllegalArgumentException if period is not positive.
      */
-    public PeriodicSequentialFuture(
+    protected PeriodicSequentialFuture(
             Callable<T> callable, long period,
             TimeUnit timeUnit, TimeController timeController) {
         super(callable, period, timeUnit, timeController);
-        if (period <= 0) {
-            throw new IllegalArgumentException();
-        }
-        this.period = Objects.requireNonNull(timeUnit).toNanos(period);
+        this.period = remainingDelay;
     }
 
     @Override

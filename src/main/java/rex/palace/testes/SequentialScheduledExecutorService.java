@@ -21,16 +21,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package rex.palace.testes.scheduled;
-
-import rex.palace.testes.SequentialExecutorService;
+package rex.palace.testes;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -66,11 +63,9 @@ public class SequentialScheduledExecutorService
     @Override
     public <V> ScheduledFuture<V> schedule(Callable<V> callable,
             long delay, TimeUnit unit) {
-        if (isShutdown()) {
-            throw new RejectedExecutionException();
-        }
+        checkIfTaskMayBeSubmitted();
         SequentialScheduledFuture<V> future
-                = new DelayedSequentialFuture<>(callable, delay,
+                = SequentialFutures.getDelayed(callable, delay,
                 unit, timeController);
         scheduledTasks.add(future);
         return future;
@@ -91,16 +86,14 @@ public class SequentialScheduledExecutorService
     @Override
     public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command,
             long initialDelay, long delay, TimeUnit unit) {
-        if (isShutdown()) {
-            throw new RejectedExecutionException();
-        }
+        checkIfTaskMayBeSubmitted();
         SequentialScheduledFuture<Object> future;
         if (initialDelay == 0L) {
-            future = new PeriodicSequentialFuture<>(
+            future = SequentialFutures.getPeriodic(
                     Executors.callable(command), delay, unit, timeController);
             future.timePassed(delay, unit);
         } else {
-            future = new DelayedPeriodicSequentialFuture<>(
+            future = SequentialFutures.getDelayedPeriodic(
                     Executors.callable(command), initialDelay,
                     delay, unit, timeController);
         }

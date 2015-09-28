@@ -21,26 +21,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package rex.palace.testes.scheduled;
-
-import java.util.concurrent.TimeUnit;
+package rex.palace.testes;
 
 /**
- * Classes implementing this interface can register to {@link TimeController} and
- * get notified if simulated time passed.
+ * Static factory class for TimeControllers.
  */
-interface TimeListener {
+public final class TimeControllers {
 
     /**
-     * Callback method when time passed.
-     *
-     * @param time the simulated amount of time that has passed
-     * @param unit the TimeUnit of time
-     * @return if this TimeListener shall be unregistered of the calling TimeController
-     * @throws NullPointerException if unit is null
+     * Private constructor since this is a utility class.
      */
-    boolean timePassed(long time, TimeUnit unit);
+    private TimeControllers() {
+        super();
+    }
 
+    /**
+     * Returns a TimeController which does absolutely nothing.
+     * @return a nop implementation of the TimeController interface
+     */
+    public static TimeController getNop() {
+        return NopTimeController.nopController;
+    }
+
+    /**
+     * Returns a TimeController not optimized for speed.
+     * @return an API conform implementation of TimeController
+     * @see TimeControllerImpl
+     */
+    public static TimeController getInstance() {
+        return TimeControllerImpl.newInstance();
+    }
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 expandtab: */

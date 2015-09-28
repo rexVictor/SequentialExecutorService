@@ -30,13 +30,13 @@ import java.util.concurrent.Callable;
  *
  * @param <V> the result type of this Future
  */
-public class ImmediatelyFuture<V> extends AbstractSequentialFuture<V> {
+class ImmediatelyFuture<V> extends AbstractSequentialFuture<V> {
 
     /**
      * Creates a new ImmediatelyFuture and runs the Callable.
      * @param callable the callable to run
      */
-    public ImmediatelyFuture(Callable<V> callable) {
+    ImmediatelyFuture(Callable<V> callable) {
         super(callable);
         run();
     }

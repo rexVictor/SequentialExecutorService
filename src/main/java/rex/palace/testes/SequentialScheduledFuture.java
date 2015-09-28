@@ -21,40 +21,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package rex.palace.testes.scheduled;
+package rex.palace.testes;
 
+import java.util.Objects;
+import java.util.concurrent.Delayed;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
- * A NOOP implementation of TimeController.
+ * A ScheduledFuture which does not run parallel.
+ *
+ * @param <T> the return type of this Future
  */
-public final class NopTimeController implements TimeController {
-
-    /**
-     * Singleton instance of the NopTimeController.
-     */
-    public static final NopTimeController nopController = new NopTimeController();
-
-    /**
-     * Creates a new NopTimeController.
-     */
-    private NopTimeController() {
-        super();
-    }
+public interface SequentialScheduledFuture<T>
+        extends SequentialFuture<T>, ScheduledFuture<T>, TimeListener {
 
     @Override
-    public void letTimePass(long time, TimeUnit unit) {
-        //does nothing
-    }
-
-    @Override
-    public void register(TimeListener listener) {
-        //does nothing
-    }
-
-    @Override
-    public void unregister(TimeListener listener) {
-        //does nothing
+    default int compareTo(Delayed other) {
+        Objects.requireNonNull(other);
+        long diff = getDelay(TimeUnit.NANOSECONDS) - other.getDelay(TimeUnit.NANOSECONDS);
+        return diff < 0 ? -1 : diff > 0 ? 1 : 0;
     }
 
 }

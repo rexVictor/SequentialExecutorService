@@ -50,12 +50,12 @@ public class OnCallFutureTest {
 
     @Test(expectedExceptions = NullPointerException.class)
     public void new_nullCallable() {
-        new OnCallFuture<>(null);
+        SequentialFutures.getOnCall(null);
     }
 
     @Test
     public void cancel_true() {
-        Future<?> future = new OnCallFuture<>(callable);
+        Future<?> future = SequentialFutures.getOnCall(callable);
         Assert.assertFalse(future.isCancelled());
         Assert.assertTrue(future.cancel(true));
         Assert.assertTrue(future.isCancelled());
@@ -63,7 +63,7 @@ public class OnCallFutureTest {
 
     @Test
     public void cancel_false() throws InterruptedException, ExecutionException, TimeoutException {
-        Future<?> future = new OnCallFuture<>(callable);
+        Future<?> future = SequentialFutures.getOnCall(callable);
         Assert.assertFalse(future.isCancelled());
         Assert.assertTrue(future.cancel(false));
         Assert.assertTrue(future.isCancelled());
@@ -71,7 +71,7 @@ public class OnCallFutureTest {
 
     @Test
     public void cancel_twice() {
-        Future<?> future = new OnCallFuture<>(callable);
+        Future<?> future = SequentialFutures.getOnCall(callable);
         Assert.assertFalse(future.isCancelled());
         Assert.assertTrue(future.cancel(false));
         Assert.assertTrue(future.isCancelled());
@@ -81,7 +81,7 @@ public class OnCallFutureTest {
     @Test
     public void cancel_afterDone()
             throws InterruptedException, ExecutionException, TimeoutException {
-        Future<?> future = new OnCallFuture<>(callable);
+        Future<?> future = SequentialFutures.getOnCall(callable);
         Assert.assertFalse(future.isCancelled());
         future.get(1L, null);
         Assert.assertFalse(future.cancel(false));
@@ -90,7 +90,7 @@ public class OnCallFutureTest {
     @Test(expectedExceptions = CancellationException.class)
     public void get_afterCancel()
             throws InterruptedException, ExecutionException, TimeoutException {
-        Future<?> future = new OnCallFuture<>(callable);
+        Future<?> future = SequentialFutures.getOnCall(callable);
         Assert.assertFalse(future.isCancelled());
         future.cancel(true);
         future.get(1L, null);
@@ -98,20 +98,20 @@ public class OnCallFutureTest {
 
     @Test
     public void isDone_false() {
-        Future<?> future = new OnCallFuture<>(callable);
+        Future<?> future = SequentialFutures.getOnCall(callable);
         Assert.assertFalse(future.isDone());
     }
 
     @Test
     public void isDone_cancelled() {
-        Future<?> future = new OnCallFuture<>(callable);
+        Future<?> future = SequentialFutures.getOnCall(callable);
         future.cancel(true);
         Assert.assertTrue(future.isDone());
     }
 
     @Test
     public void isDone_success() throws ExecutionException, InterruptedException {
-        Future<?> future = new OnCallFuture<>(callable);
+        Future<?> future = SequentialFutures.getOnCall(callable);
         future.get();
         Assert.assertTrue(future.isDone());
     }

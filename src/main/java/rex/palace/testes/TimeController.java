@@ -21,7 +21,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package rex.palace.testes.scheduled;
+package rex.palace.testes;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -30,7 +30,7 @@ import java.util.function.BooleanSupplier;
 /**
  * This describes how to simulate a real time flow.
  *
- * <p>A TimeController is used by SequentialScheduledFutures, to perform tasks
+ * <p>A TimeController is used by SequentialFutures, to perform tasks
  * when the correct amount of "time" has been passed according to the TimeController.
  */
 public interface TimeController {

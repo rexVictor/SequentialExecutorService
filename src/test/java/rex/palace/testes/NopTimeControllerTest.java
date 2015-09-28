@@ -21,30 +21,43 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package rex.palace.testes.scheduled;
+package rex.palace.testes;
 
-import rex.palace.testes.SequentialFuture;
+import org.testng.annotations.Test;
+import rex.palace.testes.TimeController;
+import rex.palace.testes.TimeControllers;
 
-import java.util.Objects;
-import java.util.concurrent.Delayed;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
- * A ScheduledFuture which does not run parallel.
+ * Tests the NopTimeController class.
  *
- * @param <T> the return type of this Future
+ * <p>Since the NopTimeController does nothing, this class
+ * only tests if any exception is thrown.
  */
-public interface SequentialScheduledFuture<T>
-        extends SequentialFuture<T>, ScheduledFuture<T>, TimeListener {
+public class NopTimeControllerTest {
 
-    @Override
-    default int compareTo(Delayed other) {
-        Objects.requireNonNull(other);
-        long diff = getDelay(TimeUnit.NANOSECONDS) - other.getDelay(TimeUnit.NANOSECONDS);
-        return diff < 0 ? -1 : diff > 0 ? 1 : 0;
+    /**
+     * The singleton instance of NopTimeController.
+     */
+    private final TimeController nopTimeController = TimeControllers.getNop();
+
+    /**
+     * Empty Constructor.
+     */
+    public NopTimeControllerTest() {
+        super();
     }
 
+    @Test
+    public void test_NoExceptions() throws TimeoutException {
+        nopTimeController.letTimePass(0L, TimeUnit.NANOSECONDS);
+        nopTimeController.letTimePassUntil(() -> true);
+        nopTimeController.letTimePassUntil(() -> true, 0L, TimeUnit.NANOSECONDS);
+        nopTimeController.register((time, unit) -> false);
+        nopTimeController.unregister((time, unit) -> false);
+    }
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 expandtab: */

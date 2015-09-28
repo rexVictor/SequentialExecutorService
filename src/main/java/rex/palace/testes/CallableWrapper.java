@@ -28,16 +28,16 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 
 /**
- * A Runnable implementation wrapping a callable for a SequentialFuture.
+ * A Runnable implementation wrapping a callable for a Future.
  *
  * @param <T> the result type of the wrapped callable
  */
-public class CallableWrapper<T> implements Runnable {
+class CallableWrapper<T> implements Runnable {
 
     /**
-     * The SequentialFuture callbacks are done to.
+     * The SequentialCallbackFuture callbacks are done to.
      */
-    private final SequentialFuture<T> sequentialFuture;
+    private final SequentialCallbackFuture<T> sequentialFuture;
 
     /**
      * The Callable being wrapped.
@@ -51,9 +51,14 @@ public class CallableWrapper<T> implements Runnable {
      * @param callable the callable to wrap
      * @throws NullPointerException if sequentialFuture or callable is null
      */
-    public CallableWrapper(SequentialFuture<T> sequentialFuture, Callable<T> callable) {
-        this.sequentialFuture = Objects.requireNonNull(sequentialFuture);
-        this.callable = Objects.requireNonNull(callable);
+    CallableWrapper(
+            SequentialCallbackFuture<T> sequentialFuture,
+            Callable<T> callable) {
+        this.sequentialFuture = Objects.requireNonNull(
+                sequentialFuture,
+                "The sequentialFuture must not be null.");
+        this.callable = Objects.requireNonNull(callable,
+                "The callable must not be null.");
     }
 
     /**
@@ -66,7 +71,8 @@ public class CallableWrapper<T> implements Runnable {
     @Override
     public void run() {
         if (sequentialFuture.isCancelled()) {
-            throw new CancellationException();
+            throw new CancellationException(
+                    "This task has been cancelled, so it will not run.");
         }
         try {
             sequentialFuture.setResult(callable.call());

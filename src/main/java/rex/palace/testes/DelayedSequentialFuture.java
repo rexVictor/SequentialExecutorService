@@ -21,37 +21,42 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package rex.palace.testes.scheduled;
+package rex.palace.testes;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 /**
- * A task which is periodically run after an initial delay.
+ * A Future which is run after an initial delay.
  *
  * @param <T> the return type of this Future.
  */
-public class DelayedPeriodicSequentialFuture<T> extends PeriodicSequentialFuture<T> {
+class DelayedSequentialFuture<T> extends AbstractSequentialScheduledFuture<T> {
 
     /**
-     * Creates a new DelayedPeriodicSequentialFuture.
+     * Creates a new DelayedSequentialFuture.
      *
-     * @param callable the task to be run
-     * @param initialDelay the initial delay to wait before the first run
-     * @param period the period in which this task shall be run after the first run
-     * @param unit the TimeUnit of initialDelay and period
-     * @param timeController the TimeController to be registered to
+     * @param callable the task to run
+     * @param initialDelay the initial delay to wait
+     * @param unit the TimeUnit of initialDelay
+     * @param timeController the timeController to register to
      * @throws NullPointerException if callable, unit or timeController is null
-     * @throws IllegalArgumentException if initialDelay or period is not positive
+     * @throws IllegalArgumentException if initialDelay is not positive
      */
-    public DelayedPeriodicSequentialFuture(
-            Callable<T> callable, long initialDelay, long period, TimeUnit unit,
-            TimeController timeController) {
-        super(callable, period, unit, timeController);
-        if (initialDelay <= 0) {
-            throw new IllegalArgumentException();
+    protected DelayedSequentialFuture(
+            Callable<T> callable, long initialDelay,
+            TimeUnit unit, TimeController timeController) {
+        super(callable, initialDelay, unit, timeController);
+    }
+
+    @Override
+    public boolean timePassed(long time, TimeUnit unit) {
+        super.timePassed(time, unit);
+        if (remainingDelay <= 0) {
+            run();
+            return true;
         }
-        remainingDelay = unit.toNanos(initialDelay);
+        return false;
     }
 
 }

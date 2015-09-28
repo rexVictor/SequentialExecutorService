@@ -41,7 +41,7 @@ public class NeverDoneFutureTest {
 
     @Test(expectedExceptions = ExecutionException.class)
     public void get() throws ExecutionException, InterruptedException {
-        Future<Void> future = new NeverDoneFuture<>(() -> null);
+        Future<Void> future = SequentialFutures.getNeverDone(() -> null);
         future.get();
     }
 

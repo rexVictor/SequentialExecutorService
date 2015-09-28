@@ -50,19 +50,19 @@ public class ImmediatelyFutureTest {
 
     @Test(expectedExceptions = NullPointerException.class)
     public void new_nullCallable() {
-        new ImmediatelyFuture<>(null);
+        SequentialFutures.getImmediately(null);
     }
 
     @Test
     public void cancel_true() {
-        Future<?> future = new ImmediatelyFuture<>(callable);
+        Future<?> future = SequentialFutures.getImmediately(callable);
         Assert.assertFalse(future.isCancelled());
         Assert.assertFalse(future.cancel(true));
     }
 
     @Test
     public void cancel_false() throws InterruptedException, ExecutionException, TimeoutException {
-        Future<?> future = new ImmediatelyFuture<>(callable);
+        Future<?> future = SequentialFutures.getImmediately(callable);
         Assert.assertFalse(future.isCancelled());
         Assert.assertFalse(future.cancel(false));
         Assert.assertSame(future.get(1L, null), null);
@@ -70,13 +70,10 @@ public class ImmediatelyFutureTest {
 
     @Test(expectedExceptions = InterruptedException.class)
     public void get_interrupted() throws Exception {
-        ImmediatelyFuture<Void> future = new ImmediatelyFuture<>(() -> null);
-        TestThread thread = new TestThread(new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                Thread.currentThread().interrupt();
-                return future.get();
-            }
+        Future<Void> future = SequentialFutures.getImmediately(() -> null);
+        TestThread thread = new TestThread(() -> {
+            Thread.currentThread().interrupt();
+            return future.get();
         });
         thread.start();
         thread.join();

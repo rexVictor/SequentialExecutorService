@@ -21,7 +21,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package rex.palace.testes.scheduled;
+package rex.palace.testes;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -30,6 +30,8 @@ import org.testng.annotations.Test;
 import rex.palace.testhelp.ArgumentConverter;
 
 import java.io.FileNotFoundException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.util.Iterator;
 import java.util.concurrent.Callable;
@@ -39,12 +41,18 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.LongStream;
 
 /**
- * Tests the DelayedPeriodicSequentialFuture class.
+ * Tests the PeriodicSequentialFuture class.
  */
-public class DelayedPeriodicSequentialFutureTest {
+public class PeriodicSequentialFutureTest {
 
     /**
-     * A Callable which counts how often call() got called.
+     * The name of a method needed for 100% Coverage.
+     */
+    private static final String RESET_FUTURE = "resetFuture";
+
+    /**
+     * Counts how often call() got called or
+     * throws an Exception if exception is not null.
      */
     private static class CallCounter implements Callable<Void> {
 
@@ -66,7 +74,9 @@ public class DelayedPeriodicSequentialFutureTest {
         }
 
         /**
-         * Throws exception if it is not null and increments callCount otherwise.
+         * Throws an Exception if exception is not null and
+         * increments callCount otherwise.
+         *
          * @return null
          * @throws Exception if exception is not null
          */
@@ -81,12 +91,12 @@ public class DelayedPeriodicSequentialFutureTest {
     }
 
     /**
-     * A mock implementation of TimeController.
+     * A Mock instance of a TimeController.
      */
     private static class MockTimeController implements TimeController {
 
         /**
-         * The TimeListener which registered last.
+         * The last registered TimeListener.
          */
         public TimeListener registered = null;
 
@@ -114,29 +124,29 @@ public class DelayedPeriodicSequentialFutureTest {
     }
 
     /**
-     * The CallCounter this' tests can use.
+     * A callCounter instance tests can use.
      */
     private CallCounter callCounter;
 
     /**
-     * The DelayedPeriodicSequentialFuture to be tested.
+     * The PeriodicSequentialFuture to run tests on.
      */
-    private DelayedPeriodicSequentialFuture<Void> future;
+    private SequentialScheduledFuture<Void> future;
 
     /**
-     * The default TimeController implementation used by future.
+     * The timeController future is registered to.
      */
     private TimeController timeController;
 
     /**
-     * A MockTimeController.
+     * A MockTimeController instance.
      */
     private MockTimeController mockTimeController;
 
     /**
-     * Empty constructor.
+     * Empty Constructor.
      */
-    public DelayedPeriodicSequentialFutureTest() {
+    public PeriodicSequentialFutureTest() {
         super();
     }
 
@@ -151,14 +161,14 @@ public class DelayedPeriodicSequentialFutureTest {
     @BeforeMethod
     public void initializeInstanceVariable() {
         callCounter = new CallCounter();
-        timeController = new TimeControllerImpl();
-        future = new DelayedPeriodicSequentialFuture<>(
-                callCounter, 5L, 10L, TimeUnit.NANOSECONDS, timeController);
+        timeController = TimeControllers.getInstance();
+        future = SequentialFutures.getPeriodic(
+                callCounter, 10L, TimeUnit.NANOSECONDS, timeController);
         mockTimeController = new MockTimeController();
     }
 
     /**
-     * Makes initial assertions before the actual tests are run.
+     * Makes basic assertions before the actual tests are run.
      */
     @BeforeMethod(dependsOnMethods = "initializeInstanceVariable")
     public void basicAssertions() {
@@ -169,46 +179,43 @@ public class DelayedPeriodicSequentialFutureTest {
 
     @Test(expectedExceptions = NullPointerException.class)
     public void new_nullCallable() {
-        new DelayedPeriodicSequentialFuture<>(
-                null, 5L, 10L, TimeUnit.NANOSECONDS,
-                NopTimeController.nopController);
+        SequentialFutures.getPeriodic(
+                null, 10L, TimeUnit.NANOSECONDS, TimeControllers.getNop());
     }
 
     @Test(expectedExceptions = NullPointerException.class)
     public void new_nullUnit() {
-        new DelayedPeriodicSequentialFuture<>(
-                callCounter, 5L,  10L, null, NopTimeController.nopController);
+        SequentialFutures.getPeriodic(
+                callCounter, 10L, null, TimeControllers.getNop());
     }
 
     @Test(expectedExceptions = NullPointerException.class)
     public void new_nullController() {
-        new DelayedPeriodicSequentialFuture<>(
-                callCounter, 5L, 10L, TimeUnit.NANOSECONDS, null);
+        SequentialFutures.getPeriodic(
+                callCounter, 10L, TimeUnit.NANOSECONDS, null);
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class, dataProvider = "nonPositiveLongs")
+    @Test(expectedExceptions = IllegalArgumentException.class,
+            dataProvider = "nonPositiveLongs")
     public void new_NonPositiveDuration(long duration) {
-        new DelayedPeriodicSequentialFuture<>(
-                callCounter, duration, 10L, TimeUnit.NANOSECONDS,
-                NopTimeController.nopController);
+        SequentialFutures.getPeriodic(
+                callCounter, duration, TimeUnit.NANOSECONDS,
+                TimeControllers.getNop());
     }
 
     @Test
     public void new_registersAtTimeController() {
-        TimeListener futureToRegister
-                = new PeriodicSequentialFuture<>(
-                callCounter, 10L, TimeUnit.NANOSECONDS, mockTimeController);
+        TimeListener futureToRegister =
+                SequentialFutures.getPeriodic(
+                        callCounter, 10L, TimeUnit.NANOSECONDS, mockTimeController);
 
         Assert.assertSame(mockTimeController.registered, futureToRegister);
     }
 
     @Test
     public void normalRun() {
-        timeController.letTimePass(4L, TimeUnit.NANOSECONDS);
-        Assert.assertEquals(callCounter.callCount, 0);
-        timeController.letTimePass(1L, TimeUnit.NANOSECONDS);
-        Assert.assertEquals(callCounter.callCount, 1);
-        timeController.letTimePass(90L, TimeUnit.NANOSECONDS);
+        timeController.letTimePass(100L, TimeUnit.NANOSECONDS);
+
         Assert.assertEquals(callCounter.callCount, 10);
         Assert.assertFalse(future.isDone());
         Assert.assertFalse(future.isCancelled());
@@ -228,6 +235,39 @@ public class DelayedPeriodicSequentialFutureTest {
         timeController.letTimePass(100L, TimeUnit.NANOSECONDS);
         Assert.assertEquals(callCounter.callCount, 10);
 
+    }
+
+    @Test
+    public void reset_notIfCancelled()
+            throws NoSuchMethodException, InvocationTargetException,
+            IllegalAccessException {
+        timeController.letTimePass(1L, TimeUnit.NANOSECONDS);
+        Assert.assertEquals(future.getDelay(TimeUnit.NANOSECONDS), 9L);
+
+        future.cancel(true);
+
+        Method method = future.getClass().getDeclaredMethod(RESET_FUTURE);
+        method.setAccessible(true);
+        method.invoke(future);
+
+        Assert.assertEquals(future.getDelay(TimeUnit.NANOSECONDS), 9L);
+    }
+
+    @Test
+    public void reset_notIfCancelledAndExceptional()
+            throws NoSuchMethodException, InvocationTargetException,
+            IllegalAccessException {
+        callCounter.exception = new MalformedURLException();
+        timeController.letTimePass(11L, TimeUnit.NANOSECONDS);
+        Assert.assertEquals(future.getDelay(TimeUnit.NANOSECONDS), -1L);
+
+        future.cancel(true);
+
+        Method method = future.getClass().getDeclaredMethod(RESET_FUTURE);
+        method.setAccessible(true);
+        method.invoke(future);
+
+        Assert.assertEquals(future.getDelay(TimeUnit.NANOSECONDS), -1L);
     }
 
     @Test
@@ -252,18 +292,13 @@ public class DelayedPeriodicSequentialFutureTest {
 
     @Test
     public void getDelay() {
-        Assert.assertEquals(future.getDelay(TimeUnit.NANOSECONDS), 5L);
-
-        timeController.letTimePass(4L, TimeUnit.NANOSECONDS);
-        Assert.assertEquals(future.getDelay(TimeUnit.NANOSECONDS), 1L);
-
-        timeController.letTimePass(1L, TimeUnit.NANOSECONDS);
         Assert.assertEquals(future.getDelay(TimeUnit.NANOSECONDS), 10L);
-
         timeController.letTimePass(9L, TimeUnit.NANOSECONDS);
+
         Assert.assertEquals(future.getDelay(TimeUnit.NANOSECONDS), 1L);
 
         timeController.letTimePass(11L, TimeUnit.NANOSECONDS);
+
         Assert.assertEquals(future.getDelay(TimeUnit.NANOSECONDS), 10L);
 
         timeController.letTimePass(3L, TimeUnit.NANOSECONDS);
@@ -283,7 +318,7 @@ public class DelayedPeriodicSequentialFutureTest {
     @Test(expectedExceptions = TimeoutException.class, timeOut = 1000L)
     public void get_TimeOut() throws InterruptedException, ExecutionException, TimeoutException {
         callCounter.exception = new MalformedURLException();
-        future.get(4L, TimeUnit.NANOSECONDS);
+        future.get(9L, TimeUnit.NANOSECONDS);
     }
 
     @Test(expectedExceptions = MalformedURLException.class, timeOut = 1000L)

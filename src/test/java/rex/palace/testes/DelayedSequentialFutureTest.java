@@ -21,7 +21,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package rex.palace.testes.scheduled;
+package rex.palace.testes;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -74,7 +74,7 @@ public class DelayedSequentialFutureTest {
     /**
      * The DelayedSequentialFuture to test.
      */
-    private DelayedSequentialFuture<Void> future;
+    private SequentialScheduledFuture<Void> future;
 
     /**
      * Empty constructor.
@@ -88,8 +88,8 @@ public class DelayedSequentialFutureTest {
      */
     @BeforeMethod
     public void initializeInstanceVariables() {
-        timeController = new TimeControllerImpl();
-        future = new DelayedSequentialFuture<>(() -> null, 10L,
+        timeController = TimeControllers.getInstance();
+        future = SequentialFutures.getDelayed(() -> null, 10L,
                 TimeUnit.MILLISECONDS, timeController);
     }
 
@@ -147,8 +147,8 @@ public class DelayedSequentialFutureTest {
 
     @Test
     public void get_limited() throws InterruptedException, ExecutionException, TimeoutException {
-        DelayedSequentialFuture<Integer> integerFuture
-                = new DelayedSequentialFuture<>(() -> 5,
+        SequentialScheduledFuture<Integer> integerFuture
+                = SequentialFutures.getDelayed(() -> 5,
                 10L, TimeUnit.MILLISECONDS, timeController);
         Assert.assertEquals(integerFuture.get(11L, TimeUnit.MILLISECONDS), Integer.valueOf(5));
     }

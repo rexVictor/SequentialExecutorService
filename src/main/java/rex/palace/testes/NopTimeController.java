@@ -23,26 +23,50 @@
 
 package rex.palace.testes;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
 
 /**
- * A Future implementation for the SequentialExecutionService.
- * @param <T> the type this future holds.
+ * A NOOP implementation of TimeController.
  */
-class NeverDoneFuture<T> extends AbstractSequentialFuture<T> {
+final class NopTimeController implements TimeController {
 
     /**
-     * Creates a new NeverDoneFuture.
-     * @param callable the callable to never run
+     * Singleton instance of the NopTimeController.
      */
-    NeverDoneFuture(Callable<T> callable) {
-        super(callable);
+    static final NopTimeController nopController = new NopTimeController();
+
+    /**
+     * Creates a new NopTimeController.
+     */
+    private NopTimeController() {
+        super();
     }
 
     @Override
-    public T get() throws ExecutionException {
-        throw new ExecutionException("I am never done!", null);
+    public void letTimePass(long time, TimeUnit unit) {
+        //does nothing
+    }
+
+    @Override
+    public void register(TimeListener listener) {
+        //does nothing
+    }
+
+    @Override
+    public void unregister(TimeListener listener) {
+        //does nothing
+    }
+
+    @Override
+    public void letTimePassUntil(BooleanSupplier supplier) {
+        //does nothing
+    }
+
+    @Override
+    public void letTimePassUntil(
+            BooleanSupplier supplier, long time, TimeUnit unit) {
+        //does nothing
     }
 
 }

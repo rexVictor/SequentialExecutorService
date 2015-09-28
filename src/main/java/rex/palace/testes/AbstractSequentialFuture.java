@@ -33,7 +33,8 @@ import java.util.concurrent.TimeoutException;
  *
  * @param <T> the type this future holds.
  */
-public abstract class AbstractSequentialFuture<T> implements SequentialFuture<T> {
+abstract class AbstractSequentialFuture<T>
+        implements SequentialCallbackFuture<T> {
 
     /**
      * Indicates if this task has been cancelled.

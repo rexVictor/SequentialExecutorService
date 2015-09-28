@@ -21,13 +21,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+package rex.palace.testes;
+
+import org.testng.Assert;
+import org.testng.annotations.Test;
+import rex.palace.testhelp.UtilityCheck;
+
 /**
- * This package provides API breaking implementations of ScheduledExecutorService
- * for testing purposes.
- *
- * <p>The implementations don't do the tasks parallel but sequential.
+ * Tests if SequentialFutures is utiliy class.
  */
-package rex.palace.testes.scheduled;
+public class SequentialFuturesTest {
+
+    /**
+     * Empty constructor.
+     */
+    public SequentialFuturesTest() {
+        super();
+    }
+
+    @Test
+    public void isUtilityClass() {
+        Assert.assertTrue(UtilityCheck.isUtilityClass(
+                SequentialFutures.class));
+    }
+
+}
 
 /* vim:set shiftwidth=4 softtabstop=4 expandtab: */
-

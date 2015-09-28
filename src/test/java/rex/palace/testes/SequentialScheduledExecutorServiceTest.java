@@ -21,11 +21,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package rex.palace.testes.scheduled;
+package rex.palace.testes;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import rex.palace.testes.*;
 
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
@@ -58,7 +59,7 @@ public class SequentialScheduledExecutorServiceTest {
      */
     @BeforeMethod
     public void initializeInstanceVariables() {
-        timeController = new TimeControllerImpl();
+        timeController = TimeControllers.getInstance();
         service = new SequentialScheduledExecutorService(timeController);
     }
 

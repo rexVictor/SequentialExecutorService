@@ -23,14 +23,14 @@
 
 package rex.palace.testes;
 
-import java.util.concurrent.RunnableFuture;
+import java.util.concurrent.Future;
 
 /**
- * An extension of RunnableFuture used for testing under non parallel conditions.
+ * An extension of Future used for testing under non parallel conditions.
  *
  * @param <T> the type of the result
  */
-public interface SequentialFuture<T> extends RunnableFuture<T> {
+public interface SequentialFuture<T> extends Future<T> {
 
     /**
      * Returns if this task has already been run.
@@ -44,22 +44,6 @@ public interface SequentialFuture<T> extends RunnableFuture<T> {
      *         been run without exceptions and true otherwise
      */
     boolean didExceptionHappen();
-
-    /**
-     * Callback method used by {@link CallableWrapper}, which is
-     * called if an exception occurred during the run.
-     *
-     * @param exception the exception which occurred. It is never null.
-     */
-    void setException(Exception exception);
-
-    /**
-     * Callback method used by {@link CallableWrapper}, which is
-     * called if the run was successful.
-     *
-     * @param result the result of this task
-     */
-    void setResult(T result);
 
 }
 

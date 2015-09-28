@@ -21,11 +21,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package rex.palace.testes.scheduled;
+package rex.palace.testes;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import rex.palace.testes.TimeController;
+import rex.palace.testes.TimeControllers;
+import rex.palace.testes.TimeListener;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -82,7 +85,7 @@ public class TimeControllerTest {
      */
     @BeforeMethod
     public void initializeInstanceVariables() {
-        timeController = new TimeControllerImpl();
+        timeController = TimeControllers.getInstance();
         timeListenerMock = new TimeListenerMock();
         timeController.register(timeListenerMock);
     }

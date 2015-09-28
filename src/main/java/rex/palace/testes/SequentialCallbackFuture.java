@@ -23,56 +23,44 @@
 
 package rex.palace.testes;
 
-import java.util.concurrent.Callable;
 import java.util.concurrent.RunnableFuture;
 
 /**
- * The state a SequentialExecutorService can be in.
+ * An extension of RunnableFuture used for testing under non parallel conditions.
+ *
+ * @param <T> the type of the result
  */
-public enum ExecutorServiceState {
+interface SequentialCallbackFuture<T> extends SequentialFuture<T>,
+        RunnableFuture<T> {
 
     /**
-     * Performs submitted tasks immediately.
+     * Returns if this task has already been run.
+     * @return true if and only if has been run.
      */
-    IMMEDIATELY {
-
-        @Override
-        public <V> RunnableFuture<V> submit(Callable<V> callable) {
-            return SequentialFutures.getImmediately(callable);
-        }
-
-    },
+    boolean hasRun();
 
     /**
-     * Preforms submitted tasks when the get is called
-     * on the Future.
+     * Returns if an exception occurred during the run.
+     * @return false if this task has never been run or has
+     *         been run without exceptions and true otherwise
      */
-    ONCALL {
-
-        @Override
-        public <V> RunnableFuture<V> submit(Callable<V> callable) {
-            return SequentialFutures.getOnCall(callable);
-        }
-
-    },
-    /**
-     * Never performs the submitted tasks.
-     */
-    NEVER {
-        @Override
-        public <V> RunnableFuture<V> submit(Callable<V> callable) {
-            return SequentialFutures.getNeverDone(callable);
-        }
-    };
+    boolean didExceptionHappen();
 
     /**
-     * Returns a RunnableFuture behaving according to this ExecutorServiceState.
+     * Callback method used by {@link CallableWrapper}, which is
+     * called if an exception occurred during the run.
      *
-     * @param callable the callable this future shall handle
-     * @param <V> the return type of callable
-     * @return a RunnableFuture handling callable
+     * @param exception the exception which occurred. It is never null.
      */
-    public abstract <V> RunnableFuture<V> submit(Callable<V> callable);
+    void setException(Exception exception);
+
+    /**
+     * Callback method used by {@link CallableWrapper}, which is
+     * called if the run was successful.
+     *
+     * @param result the result of this task
+     */
+    void setResult(T result);
 
 }
 

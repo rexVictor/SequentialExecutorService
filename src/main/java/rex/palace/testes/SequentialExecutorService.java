@@ -81,6 +81,13 @@ public class SequentialExecutorService implements ExecutorService {
         super();
     }
 
+    protected final void checkIfTaskMayBeSubmitted() {
+        if (isShutdown()) {
+            throw new RejectedExecutionException(
+                    "This service has already been shutdown.");
+        }
+    }
+
     @Override
     public <T> T invokeAny(
             Collection<? extends Callable<T>> callables,
@@ -91,9 +98,7 @@ public class SequentialExecutorService implements ExecutorService {
     @Override
     public <T> T invokeAny(Collection<? extends Callable<T>> callables)
             throws InterruptedException, ExecutionException {
-        if (isShutdown) {
-            throw new RejectedExecutionException();
-        }
+        checkIfTaskMayBeSubmitted();
         return callables.stream().map(ImmediatelyFuture<T>::new).filter(Future::isDone)
                 .filter(this::isRegularlyDone).findAny().get().get();
     }
@@ -122,9 +127,7 @@ public class SequentialExecutorService implements ExecutorService {
     @Override
     public <T> List<Future<T>> invokeAll(
             Collection<? extends Callable<T>> callables) {
-        if (isShutdown) {
-            throw new RejectedExecutionException();
-        }
+        checkIfTaskMayBeSubmitted();
         return callables.stream().map(ImmediatelyFuture<T>::new).collect(Collectors.toList());
     }
 
@@ -147,12 +150,9 @@ public class SequentialExecutorService implements ExecutorService {
      * @return a callable calling runnable and returning result
      */
     private <T> Callable<T> convert(Runnable runnable, T result) {
-        return new Callable<T>() {
-            @Override
-            public T call() throws Exception {
-                runnable.run();
-                return result;
-            }
+        return () -> {
+            runnable.run();
+            return result;
         };
     }
 
@@ -180,9 +180,7 @@ public class SequentialExecutorService implements ExecutorService {
      * @return a Future for callable
      */
     private <T> Future<T> submit(Callable<T> callable, ExecutorServiceState serviceState) {
-        if (isShutdown) {
-            throw new RejectedExecutionException();
-        }
+        checkIfTaskMayBeSubmitted();
         RunnableFuture<T> future = serviceState.submit(callable);
         submittedTasks.add(future);
         return future;

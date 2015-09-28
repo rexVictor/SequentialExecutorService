@@ -21,9 +21,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package rex.palace.testes.scheduled;
-
-import rex.palace.testes.AbstractSequentialFuture;
+package rex.palace.testes;
 
 import java.util.Objects;
 import java.util.concurrent.Callable;
@@ -36,7 +34,7 @@ import java.util.concurrent.TimeoutException;
  *
  * @param <T> the type this future holds.
  */
-public abstract class AbstractSequentialScheduledFuture<T>
+abstract class AbstractSequentialScheduledFuture<T>
         extends AbstractSequentialFuture<T>
         implements SequentialScheduledFuture<T> {
 
@@ -60,18 +58,25 @@ public abstract class AbstractSequentialScheduledFuture<T>
      *
      * @throws NullPointerException if callable, unit or timeController is null
      */
-    public AbstractSequentialScheduledFuture(
+    protected AbstractSequentialScheduledFuture(
             Callable<T> callable, long delay,
             TimeUnit unit, TimeController timeController) {
         super(callable);
-        remainingDelay = Objects.requireNonNull(unit).toNanos(delay);
-        this.timeController = Objects.requireNonNull(timeController);
+        if (delay <= 0) {
+            throw new IllegalArgumentException(
+                    "The delay must be positive, but was '" + delay + "'.");
+        }
+        remainingDelay = Objects.requireNonNull(
+                unit, "The unit must not be null").toNanos(delay);
+        this.timeController = Objects.requireNonNull(timeController,
+                "The timeController must not be null");
         timeController.register(this);
     }
 
     @Override
     public long getDelay(TimeUnit unit) {
-        return Objects.requireNonNull(unit).convert(remainingDelay, TimeUnit.NANOSECONDS);
+        return Objects.requireNonNull(unit).convert(
+                remainingDelay, TimeUnit.NANOSECONDS);
     }
 
     @Override

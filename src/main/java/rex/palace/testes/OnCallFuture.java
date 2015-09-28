@@ -31,13 +31,13 @@ import java.util.concurrent.ExecutionException;
  *
  * @param <V> the result type of this Future
  */
-public class OnCallFuture<V> extends AbstractSequentialFuture<V> {
+class OnCallFuture<V> extends AbstractSequentialFuture<V> {
 
     /**
      * Creates a new OnCallFuture.
      * @param callable the callable to run when get() is called.
      */
-    public OnCallFuture(Callable<V> callable) {
+    OnCallFuture(Callable<V> callable) {
         super(callable);
     }
 

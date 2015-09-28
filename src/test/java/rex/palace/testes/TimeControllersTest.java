@@ -21,47 +21,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package rex.palace.testes.scheduled;
+package rex.palace.testes;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+import rex.palace.testes.TimeControllers;
+import rex.palace.testhelp.UtilityCheck;
 
 /**
- * Created by rex on 9/11/15.
+ * Tests if TimeControllers is utility class.
  */
-public class TimeControllerImpl implements TimeController {
+public class TimeControllersTest {
 
     /**
-     * The registered TimeListeners.
+     * Empty constructor.
      */
-    private final Set<TimeListener> listeners = new HashSet<>();
-
-    /**
-     * Creates a new TimeController.
-     */
-    public TimeControllerImpl() {
+    public TimeControllersTest() {
         super();
     }
 
-    @Override
-    public void letTimePass(long time, TimeUnit unit) {
-        listeners.removeAll(
-                listeners.stream().filter(
-                        listener -> listener.timePassed(time, unit)
-                ).collect(Collectors.toSet()));
-    }
-
-    @Override
-    public void register(TimeListener listener) {
-        listeners.add(Objects.requireNonNull(listener));
-    }
-
-    @Override
-    public void unregister(TimeListener listener) {
-        listeners.remove(Objects.requireNonNull(listener));
+    @Test
+    public void isUtilityClass() {
+        Assert.assertTrue(UtilityCheck.isUtilityClass(TimeControllers.class));
     }
 
 }
