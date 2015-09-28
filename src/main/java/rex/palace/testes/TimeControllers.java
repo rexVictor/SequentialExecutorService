@@ -40,7 +40,7 @@ public final class TimeControllers {
      * @return a nop implementation of the TimeController interface
      */
     public static TimeController getNop() {
-        return NopTimeController.nopController;
+        return NopTimeController.NOP_TIME_CONTROLLER;
     }
 
     /**

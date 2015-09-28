@@ -55,10 +55,11 @@ public class TimeControllerImpl implements TimeController {
 
     @Override
     public void letTimePass(long time, TimeUnit unit) {
-        listeners.removeAll(
+        Set<TimeListener> toRemove =
                 listeners.stream().filter(
                         listener -> listener.timePassed(time, unit)
-                ).collect(Collectors.toSet()));
+                ).collect(Collectors.toSet());
+        listeners.removeAll(toRemove);
     }
 
     @Override
@@ -75,7 +76,7 @@ public class TimeControllerImpl implements TimeController {
      * Returns a new instance of TimeControllerImpl.
      * @return a new instance of TimeControllerImpl
      */
-    static final TimeController newInstance() {
+    static TimeController newInstance() {
         return new TimeControllerImpl();
     }
 

@@ -40,7 +40,7 @@ public interface SequentialScheduledFuture<T>
     default int compareTo(Delayed other) {
         Objects.requireNonNull(other);
         long diff = getDelay(TimeUnit.NANOSECONDS) - other.getDelay(TimeUnit.NANOSECONDS);
-        return diff < 0 ? -1 : diff > 0 ? 1 : 0;
+        return (diff < 0L) ? -1 : ((diff > 0L) ? 1 : 0);
     }
 
 }

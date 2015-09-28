@@ -108,10 +108,12 @@ public interface TimeController {
             BooleanSupplier condition, long time, TimeUnit unit)
             throws TimeoutException {
         long timeInNanos = unit.toNanos(time);
-        int passedNanos = 0;
+        long passedNanos = 0L;
         while (!condition.getAsBoolean()) {
             if (passedNanos == timeInNanos) {
-                throw new TimeoutException();
+                throw new TimeoutException(
+                        "The condition did not evaluate to true in " + time
+                                + ' ' + unit);
             }
             letTimePass(1L, TimeUnit.NANOSECONDS);
             passedNanos++;

@@ -34,7 +34,7 @@ final class NopTimeController implements TimeController {
     /**
      * Singleton instance of the NopTimeController.
      */
-    static final NopTimeController nopController = new NopTimeController();
+    static final NopTimeController NOP_TIME_CONTROLLER = new NopTimeController();
 
     /**
      * Creates a new NopTimeController.
@@ -59,13 +59,13 @@ final class NopTimeController implements TimeController {
     }
 
     @Override
-    public void letTimePassUntil(BooleanSupplier supplier) {
+    public void letTimePassUntil(BooleanSupplier condition) {
         //does nothing
     }
 
     @Override
     public void letTimePassUntil(
-            BooleanSupplier supplier, long time, TimeUnit unit) {
+            BooleanSupplier condition, long time, TimeUnit unit) {
         //does nothing
     }
 

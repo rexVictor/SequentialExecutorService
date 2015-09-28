@@ -52,7 +52,7 @@ class DelayedSequentialFuture<T> extends AbstractSequentialScheduledFuture<T> {
     @Override
     public boolean timePassed(long time, TimeUnit unit) {
         super.timePassed(time, unit);
-        if (remainingDelay <= 0) {
+        if (remainingDelay <= 0L) {
             run();
             return true;
         }

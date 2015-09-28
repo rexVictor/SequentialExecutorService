@@ -74,7 +74,7 @@ abstract class AbstractSequentialFuture<T>
     /**
      * Since nothing runs parallel, this method just delegates to get().
      *
-     * @param timeOut discarded
+     * @param timeout discarded
      * @param unit discarded
      * @return the result of this task
      * @throws ExecutionException if an exception occurred during this task
@@ -82,7 +82,7 @@ abstract class AbstractSequentialFuture<T>
      * @throws TimeoutException in this class never; subclasses may throw
      */
     @Override
-    public T get(long timeOut, TimeUnit unit)
+    public T get(long timeout, TimeUnit unit)
             throws ExecutionException, InterruptedException, TimeoutException {
         return get();
     }
@@ -106,8 +106,8 @@ abstract class AbstractSequentialFuture<T>
     }
 
     @Override
-    public void setException(Exception runException) {
-        this.exception = runException;
+    public void setException(Exception exception) {
+        this.exception = exception;
     }
 
     @Override
@@ -126,7 +126,7 @@ abstract class AbstractSequentialFuture<T>
     }
 
     @Override
-    public boolean cancel(boolean interruptPossible) {
+    public boolean cancel(boolean mayInterruptIfRunning) {
         if (isDone()) {
             return false;
         }
@@ -140,7 +140,7 @@ abstract class AbstractSequentialFuture<T>
     }
 
     @Override
-    public boolean didExceptionHappen() {
+    public boolean isExceptionHappened() {
         return exception != null;
     }
 

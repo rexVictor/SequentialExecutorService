@@ -62,7 +62,7 @@ abstract class AbstractSequentialScheduledFuture<T>
             Callable<T> callable, long delay,
             TimeUnit unit, TimeController timeController) {
         super(callable);
-        if (delay <= 0) {
+        if (delay <= 0L) {
             throw new IllegalArgumentException(
                     "The delay must be positive, but was '" + delay + "'.");
         }
@@ -80,8 +80,8 @@ abstract class AbstractSequentialScheduledFuture<T>
     }
 
     @Override
-    public boolean cancel(boolean mayInterrupt) {
-        boolean result = super.cancel(mayInterrupt);
+    public boolean cancel(boolean mayInterruptIfRunning) {
+        boolean result = super.cancel(mayInterruptIfRunning);
         if (result) {
             timeController.unregister(this);
         }
@@ -120,6 +120,8 @@ abstract class AbstractSequentialScheduledFuture<T>
      * Causes the associated TimeController to simulate passing time
      * until this future is done or the timeout occurred and returns it result.
      *
+     * @param timeout the time to wait
+     * @param unit the TimeUnit of timeout
      * @return the result of the future
      *
      * @throws ExecutionException if an Exception occurred running this task
@@ -127,10 +129,10 @@ abstract class AbstractSequentialScheduledFuture<T>
      * @throws TimeoutException if the result was not ready in time
      */
     @Override
-    public T get(long time, TimeUnit unit)
+    public T get(long timeout, TimeUnit unit)
             throws TimeoutException, ExecutionException, InterruptedException {
-        timeController.letTimePassUntil(this::isDone, time, unit);
-        return super.get(time, unit);
+        timeController.letTimePassUntil(this::isDone, timeout, unit);
+        return super.get(timeout, unit);
     }
 
 }

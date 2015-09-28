@@ -62,9 +62,9 @@ class PeriodicSequentialFuture<T> extends AbstractSequentialScheduledFuture<T> {
     public boolean timePassed(long time, TimeUnit unit) {
         super.timePassed(time, unit);
         long delay;
-        while ((delay = getDelay(TimeUnit.NANOSECONDS)) <= 0) {
+        while ((delay = getDelay(TimeUnit.NANOSECONDS)) <= 0L) {
             run();
-            if (didExceptionHappen()) {
+            if (isExceptionHappened()) {
                 return true;
             }
             resetFuture();
@@ -77,7 +77,7 @@ class PeriodicSequentialFuture<T> extends AbstractSequentialScheduledFuture<T> {
      * Resets this future to its initial state to be rerun.
      */
     private void resetFuture() {
-        if (!isCancelled() && !didExceptionHappen()) {
+        if (!isCancelled() && !isExceptionHappened()) {
             remainingDelay = period;
             ran = false;
         }

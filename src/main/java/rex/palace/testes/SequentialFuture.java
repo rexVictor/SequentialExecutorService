@@ -43,7 +43,7 @@ public interface SequentialFuture<T> extends Future<T> {
      * @return false if this task has never been run or has
      *         been run without exceptions and true otherwise
      */
-    boolean didExceptionHappen();
+    boolean isExceptionHappened();
 
 }
 

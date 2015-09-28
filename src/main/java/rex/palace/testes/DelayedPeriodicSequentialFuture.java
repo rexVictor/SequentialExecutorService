@@ -48,7 +48,7 @@ class DelayedPeriodicSequentialFuture<T> extends PeriodicSequentialFuture<T> {
             Callable<T> callable, long initialDelay, long period, TimeUnit unit,
             TimeController timeController) {
         super(callable, period, unit, timeController);
-        if (initialDelay <= 0) {
+        if (initialDelay <= 0L) {
             throw new IllegalArgumentException(
                     "The initialDelay must be positive, but was '"
                             + initialDelay + "'.");

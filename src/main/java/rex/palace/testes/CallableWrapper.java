@@ -75,7 +75,8 @@ class CallableWrapper<T> implements Runnable {
                     "This task has been cancelled, so it will not run.");
         }
         try {
-            sequentialFuture.setResult(callable.call());
+            T call = callable.call();
+            sequentialFuture.setResult(call);
         } catch (Exception e) {
             sequentialFuture.setException(e);
         }

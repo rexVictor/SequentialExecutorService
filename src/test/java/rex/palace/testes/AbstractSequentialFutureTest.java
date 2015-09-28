@@ -112,7 +112,7 @@ public class AbstractSequentialFutureTest {
     public void initAssertions() {
         Assert.assertFalse(future.hasRun());
         Assert.assertFalse(future.isCancelled());
-        Assert.assertFalse(future.didExceptionHappen());
+        Assert.assertFalse(future.isExceptionHappened());
         Assert.assertFalse(future.isDone());
     }
 
@@ -130,7 +130,7 @@ public class AbstractSequentialFutureTest {
             future.run();
         } catch (CancellationException e) {
             Assert.assertFalse(future.hasRun());
-            Assert.assertFalse(future.didExceptionHappen());
+            Assert.assertFalse(future.isExceptionHappened());
             Assert.assertEquals(callCounter.callCount, 0);
             throw e;
         }
@@ -144,7 +144,7 @@ public class AbstractSequentialFutureTest {
         Assert.assertFalse(future.isCancelled());
         Assert.assertTrue(future.isDone());
         Assert.assertTrue(future.hasRun());
-        Assert.assertFalse(future.didExceptionHappen());
+        Assert.assertFalse(future.isExceptionHappened());
         Assert.assertEquals(callCounter.callCount, 1);
     }
 
@@ -155,7 +155,7 @@ public class AbstractSequentialFutureTest {
         Assert.assertTrue(future.hasRun());
         Assert.assertTrue(future.isDone());
         Assert.assertFalse(future.isCancelled());
-        Assert.assertFalse(future.didExceptionHappen());
+        Assert.assertFalse(future.isExceptionHappened());
         Assert.assertEquals(callCounter.callCount, 1);
         Assert.assertEquals(future.get(), Integer.valueOf(1));
         Assert.assertEquals(future.get(10L, TimeUnit.MILLISECONDS), Integer.valueOf(1));
@@ -170,7 +170,7 @@ public class AbstractSequentialFutureTest {
         Assert.assertTrue(future.isDone());
         Assert.assertFalse(future.isCancelled());
         Assert.assertEquals(callCounter.callCount, 0);
-        Assert.assertTrue(future.didExceptionHappen());
+        Assert.assertTrue(future.isExceptionHappened());
         try {
             future.get();
         } catch (ExecutionException e) {

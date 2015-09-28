@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
  * Classes implementing this interface can register to a {@link TimeController}
  * and get notified if simulated time passed.
  */
+@FunctionalInterface
 public interface TimeListener {
 
     /**

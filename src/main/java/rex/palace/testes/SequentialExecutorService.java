@@ -67,7 +67,7 @@ public class SequentialExecutorService implements ExecutorService {
     /**
      * A list of all submitted tasks.
      */
-    private List<RunnableFuture<?>> submittedTasks = new ArrayList<>();
+    private final List<RunnableFuture<?>> submittedTasks = new ArrayList<>();
 
     /**
      * The tasks which will be successfully run when calling shutdown().
@@ -88,7 +88,7 @@ public class SequentialExecutorService implements ExecutorService {
      * @throws RejectedExecutionException if this service is shutdown.
      */
     protected final void checkIfTaskMayBeSubmitted() {
-        if (isShutdown()) {
+        if (isShutdown) {
             throw new RejectedExecutionException(
                     "This service has already been shutdown.");
         }
@@ -96,17 +96,18 @@ public class SequentialExecutorService implements ExecutorService {
 
     @Override
     public <T> T invokeAny(
-            Collection<? extends Callable<T>> callables,
-            long timeOut, TimeUnit unit) throws ExecutionException, InterruptedException {
-        return invokeAny(callables);
+            Collection<? extends Callable<T>> tasks,
+            long timeout, TimeUnit unit) throws ExecutionException, InterruptedException {
+        return invokeAny(tasks);
     }
 
     @Override
-    public <T> T invokeAny(Collection<? extends Callable<T>> callables)
+    public <T> T invokeAny(Collection<? extends Callable<T>> tasks)
             throws InterruptedException, ExecutionException {
         checkIfTaskMayBeSubmitted();
-        return callables.stream().map(ImmediatelyFuture<T>::new).filter(Future::isDone)
-                .filter(this::isRegularlyDone).findAny().get().get();
+        return tasks.stream().map(ImmediatelyFuture<T>::new).filter(Future::isDone)
+                .filter(SequentialExecutorService::isRegularlyDone)
+                .findAny().get().get();
     }
 
     /**
@@ -114,7 +115,7 @@ public class SequentialExecutorService implements ExecutorService {
      * @param future the future to test for regularly completion.
      * @return false if and only if calling get() on future results in an exception.
      */
-    private boolean isRegularlyDone(Future<?> future) {
+    private static boolean isRegularlyDone(Future<?> future) {
         try {
             future.get();
         } catch (InterruptedException | ExecutionException e) {
@@ -125,16 +126,16 @@ public class SequentialExecutorService implements ExecutorService {
 
     @Override
     public <T> List<Future<T>> invokeAll(
-            Collection<? extends Callable<T>> callables,
-            long timeOut, TimeUnit unit) {
-        return invokeAll(callables);
+            Collection<? extends Callable<T>> tasks,
+            long timeout, TimeUnit unit) {
+        return invokeAll(tasks);
     }
 
     @Override
     public <T> List<Future<T>> invokeAll(
-            Collection<? extends Callable<T>> callables) {
+            Collection<? extends Callable<T>> tasks) {
         checkIfTaskMayBeSubmitted();
-        return callables.stream().map(ImmediatelyFuture<T>::new).collect(Collectors.toList());
+        return tasks.stream().map(ImmediatelyFuture<T>::new).collect(Collectors.toList());
     }
 
     /**
@@ -143,7 +144,7 @@ public class SequentialExecutorService implements ExecutorService {
      * @param runnable the runnable to convert
      * @return a callable calling runnable
      */
-    private Callable<Void> convert(Runnable runnable) {
+    private static Callable<Void> convert(Runnable runnable) {
         return convert(runnable, null);
     }
 
@@ -155,7 +156,7 @@ public class SequentialExecutorService implements ExecutorService {
      * @param <T> the type of result
      * @return a callable calling runnable and returning result
      */
-    private <T> Callable<T> convert(Runnable runnable, T result) {
+    private static <T> Callable<T> convert(Runnable runnable, T result) {
         return () -> {
             runnable.run();
             return result;
@@ -163,18 +164,18 @@ public class SequentialExecutorService implements ExecutorService {
     }
 
     @Override
-    public Future<Void> submit(Runnable runnable) {
-        return submit(convert(runnable), state);
+    public Future<Void> submit(Runnable task) {
+        return submit(convert(task), state);
     }
 
     @Override
-    public <T> Future<T> submit(Runnable runnable, T result) {
-        return submit(convert(runnable, result), state);
+    public <T> Future<T> submit(Runnable task, T result) {
+        return submit(convert(task, result), state);
     }
 
     @Override
-    public <T> Future<T> submit(Callable<T> callable) {
-        return submit(callable, state);
+    public <T> Future<T> submit(Callable<T> task) {
+        return submit(task, state);
     }
 
     /**
@@ -215,7 +216,7 @@ public class SequentialExecutorService implements ExecutorService {
     }
 
     @Override
-    public boolean awaitTermination(long timeOut, TimeUnit unit)
+    public boolean awaitTermination(long timeout, TimeUnit unit)
                 throws InterruptedException {
         if (!isShutdown) {
             return false;
@@ -223,7 +224,8 @@ public class SequentialExecutorService implements ExecutorService {
         if (Thread.currentThread().isInterrupted()) {
             throw new InterruptedException();
         }
-        onAwaitTerminatonSuccessfulTasks.stream().forEach(this::getResult);
+        onAwaitTerminatonSuccessfulTasks.stream()
+                .forEach(SequentialExecutorService::getResult);
         return notFinishedTasks().collect(Collectors.toList()).isEmpty();
     }
 
@@ -232,7 +234,7 @@ public class SequentialExecutorService implements ExecutorService {
      *
      * @param future the Future to check
      */
-    private void getResult(Future<?> future) {
+    private static void getResult(Future<?> future) {
         try {
             future.get();
         } catch (ExecutionException | InterruptedException expected) {
@@ -254,8 +256,8 @@ public class SequentialExecutorService implements ExecutorService {
     }
 
     @Override
-    public void execute(Runnable runnable) {
-        runnable.run();
+    public void execute(Runnable command) {
+        command.run();
     }
 
     /**
