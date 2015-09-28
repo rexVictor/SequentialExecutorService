@@ -49,6 +49,11 @@ abstract class AbstractSequentialScheduledFuture<T>
     protected final TimeController timeController;
 
     /**
+     * The initial delay.
+     */
+    protected final long initialDelay;
+
+    /**
      * Creates a new AbstractSequentialScheduledFuture.
      *
      * @param callable the task to perform
@@ -70,6 +75,7 @@ abstract class AbstractSequentialScheduledFuture<T>
                 unit, "The unit must not be null").toNanos(delay);
         this.timeController = Objects.requireNonNull(timeController,
                 "The timeController must not be null");
+        initialDelay = remainingDelay;
         timeController.register(this);
     }
 
@@ -133,6 +139,19 @@ abstract class AbstractSequentialScheduledFuture<T>
             throws TimeoutException, ExecutionException, InterruptedException {
         timeController.letTimePassUntil(this::isDone, timeout, unit);
         return super.get(timeout, unit);
+    }
+
+    @Override
+    protected String toStringHelper() {
+        return "TimeController = " + timeController + ", "
+                + super.toStringHelper()
+                + ", remainingDelay = " + remainingDelay
+                + ", initialDelay = " + initialDelay;
+    }
+
+    @Override
+    public String toString() {
+        return "SequentialScheduledFuture" + "[" + toStringHelper() + "]";
     }
 
 }

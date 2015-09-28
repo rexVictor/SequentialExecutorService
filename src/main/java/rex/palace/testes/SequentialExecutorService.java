@@ -311,6 +311,24 @@ public class SequentialExecutorService implements ExecutorService {
     public boolean isJustShutdown() {
         return shutdown;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder(getClass().getSimpleName());
+        sb.append("[");
+        if (isShutdown) {
+            sb.append("SHUTDOWN");
+        } else {
+            sb.append("READY");
+        }
+        sb.append(", submittedTasks = ")
+                .append(submittedTasks.size())
+                .append(", finishedTasks = ")
+                .append(submittedTasks.size() - notFinishedTasks().count())
+                .append("]");
+
+        return sb.toString();
+    }
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 expandtab: */

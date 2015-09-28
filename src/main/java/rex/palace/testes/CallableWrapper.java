@@ -82,6 +82,11 @@ class CallableWrapper<T> implements Runnable {
         }
     }
 
+    @Override
+    public String toString() {
+        return callable.toString();
+    }
+
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 expandtab: */

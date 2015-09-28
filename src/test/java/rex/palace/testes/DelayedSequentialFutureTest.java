@@ -32,6 +32,8 @@ import java.util.concurrent.Delayed;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Tests the DelayedSequentialFuture class.
@@ -151,6 +153,33 @@ public class DelayedSequentialFutureTest {
                 = SequentialFutures.getDelayed(() -> 5,
                 10L, TimeUnit.MILLISECONDS, timeController);
         Assert.assertEquals(integerFuture.get(11L, TimeUnit.MILLISECONDS), Integer.valueOf(5));
+    }
+
+    @Test
+    public void toString_running() {
+        StringBuilder regexPattern = new StringBuilder();
+        regexPattern.append("SequentialScheduledFuture\\[")
+                .append("TimeController = ")
+                .append(".*")
+                .append(", task = ")
+                .append(".*")
+                .append(", state = ")
+                .append("running")
+                .append(", remainingDelay = ")
+                .append(".*")
+                .append(", initialDelay = ")
+                .append(".*")
+                .append("\\]");
+        Pattern pattern
+                = Pattern.compile(regexPattern.toString());
+
+        SequentialScheduledFuture<Void> future
+                = SequentialFutures.getDelayed(
+                () -> null, 10L, TimeUnit.NANOSECONDS, TimeControllers.getNop());
+
+        Matcher matcher = pattern.matcher(future.toString());
+
+        Assert.assertTrue(matcher.matches());
     }
 
 }

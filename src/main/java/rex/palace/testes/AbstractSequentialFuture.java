@@ -144,6 +144,31 @@ abstract class AbstractSequentialFuture<T>
         return exception != null;
     }
 
+    protected String toStringHelper() {
+        StringBuilder sb = new StringBuilder("task = ")
+                .append(wrapper)
+                .append(", state = ");
+        if (isCancelled()) {
+            sb.append("cancelled");
+        } else if (isDone()) {
+            sb.append("done ");
+            if (isExceptionHappened()) {
+                sb.append("failure: ")
+                        .append(exception.getClass().getName());
+            } else {
+                sb.append("result: ").append(result);
+            }
+        } else {
+            sb.append("running");
+        }
+        return sb.toString();
+    }
+
+    @Override
+    public String toString() {
+        return "SequentialFuture [" + toStringHelper() + "]";
+    }
+
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 expandtab: */

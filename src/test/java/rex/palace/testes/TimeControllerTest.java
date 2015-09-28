@@ -26,12 +26,12 @@ package rex.palace.testes;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import rex.palace.testes.TimeController;
-import rex.palace.testes.TimeControllers;
-import rex.palace.testes.TimeListener;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Tests the TimeControllerImpl class.
@@ -134,6 +134,19 @@ public class TimeControllerTest {
 
         timeController.letTimePass(10L, TimeUnit.NANOSECONDS);
         Assert.assertEquals(timeListenerMock.passedTimeInNanos, 10L);
+
+    }
+
+    @Test
+    public void toString_test() {
+        TimeController testController = TimeControllers.getInstance();
+        Pattern pattern = Pattern.compile(
+                timeController.getClass().getName() + "@[0-9a-fA-f]*"
+                + "\\[TimeListener = .*\\]");
+
+        Matcher matcher = pattern.matcher(testController.toString());
+
+        Assert.assertTrue(matcher.matches());
 
     }
 

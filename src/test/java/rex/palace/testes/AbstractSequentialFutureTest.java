@@ -23,7 +23,7 @@
 
 package rex.palace.testes;
 
-import junit.framework.Assert;
+import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import rex.palace.testhelp.TestThread;
@@ -35,6 +35,8 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Tests the AbstractSequentialFuture class.
@@ -180,18 +182,62 @@ public class AbstractSequentialFutureTest {
 
     @Test(expectedExceptions = InterruptedException.class)
     public void get_interrupted() throws Exception {
-        TestThread testThread = new TestThread(new Callable<Object>() {
-
-            @Override
-            public Object call() throws ExecutionException, InterruptedException {
-                Thread.currentThread().interrupt();
-                future.get();
-                return null;
-            }
+        TestThread testThread = new TestThread(() -> {
+            Thread.currentThread().interrupt();
+            future.get();
+            return null;
         });
         testThread.start();
         testThread.join();
         testThread.finish();
+    }
+
+    @Test
+    public void toString_cancelled() {
+        Pattern pattern
+                = Pattern.compile(
+                "SequentialFuture \\[task = .*, state = cancelled\\]");
+
+        future.cancel(true);
+        Matcher matcher = pattern.matcher(future.toString());
+
+        Assert.assertTrue(matcher.matches());
+    }
+
+    @Test
+    public void toString_done_exceptional() {
+        Pattern pattern
+                = Pattern.compile(
+                "SequentialFuture \\[task = .*, state = done failure: .*\\]");
+
+        callCounter.exception = new ClassCastException();
+        future.run();
+        Matcher matcher = pattern.matcher(future.toString());
+
+        Assert.assertTrue(matcher.matches());
+    }
+
+    @Test
+    public void toString_done_regular() {
+        Pattern pattern
+                = Pattern.compile(
+                "SequentialFuture \\[task = .*, state = done result: .*\\]");
+
+        future.run();
+        Matcher matcher = pattern.matcher(future.toString());
+
+        Assert.assertTrue(matcher.matches());
+    }
+
+    @Test
+    public void toString_notDone() {
+        Pattern pattern
+                = Pattern.compile(
+                "SequentialFuture \\[task = .*, state = running\\]");
+
+        Matcher matcher = pattern.matcher(future.toString());
+
+        Assert.assertTrue(matcher.matches());
     }
 
 }

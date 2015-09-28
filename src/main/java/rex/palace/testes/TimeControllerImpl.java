@@ -72,6 +72,11 @@ public class TimeControllerImpl implements TimeController {
         listeners.remove(Objects.requireNonNull(listener));
     }
 
+    @Override
+    public String toString() {
+        return super.toString() + "[TimeListener = " + listeners + "]";
+    }
+
     /**
      * Returns a new instance of TimeControllerImpl.
      * @return a new instance of TimeControllerImpl

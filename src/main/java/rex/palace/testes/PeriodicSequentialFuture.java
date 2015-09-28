@@ -83,6 +83,16 @@ class PeriodicSequentialFuture<T> extends AbstractSequentialScheduledFuture<T> {
         }
     }
 
+    @Override
+    protected String toStringHelper() {
+        return super.toStringHelper() + ", period = " + period;
+    }
+
+    @Override
+    public String toString() {
+        return "PeriodicSequentialFuture[" + toStringHelper() + ']';
+    }
+
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 expandtab: */

@@ -38,6 +38,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.LongStream;
 
 /**
@@ -152,7 +154,8 @@ public class PeriodicSequentialFutureTest {
 
     @DataProvider(name = "nonPositiveLongs")
     public Iterator<Object[]> getNonPositiveLongs() {
-        return ArgumentConverter.convert(LongStream.range(0, 10).mapToObj(lg -> -lg));
+        return ArgumentConverter.convert(LongStream.range(0L, 10L)
+                .mapToObj(lg -> -lg));
     }
 
     /**
@@ -329,6 +332,35 @@ public class PeriodicSequentialFutureTest {
         } catch (ExecutionException e) {
             throw e.getCause();
         }
+    }
+
+    @Test
+    public void toString_running() {
+        StringBuilder regexPattern = new StringBuilder();
+        regexPattern.append("PeriodicSequentialFuture\\[")
+                .append("TimeController = ")
+                .append(".*")
+                .append(", task = ")
+                .append(".*")
+                .append(", state = ")
+                .append("running")
+                .append(", remainingDelay = ")
+                .append(".*")
+                .append(", initialDelay = ")
+                .append(".*")
+                .append(", period =")
+                .append(".*")
+                .append("\\]");
+        Pattern pattern
+                = Pattern.compile(regexPattern.toString());
+
+        SequentialScheduledFuture<Void> future
+                = SequentialFutures.getPeriodic(
+                () -> null, 10L, TimeUnit.NANOSECONDS, TimeControllers.getNop());
+
+        Matcher matcher = pattern.matcher(future.toString());
+
+        Assert.assertTrue(matcher.matches());
     }
 
 }

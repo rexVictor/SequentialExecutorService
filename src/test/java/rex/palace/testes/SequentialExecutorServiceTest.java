@@ -37,6 +37,8 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -304,6 +306,47 @@ public class SequentialExecutorServiceTest {
     @Test
     public void isTerminated_notShutdown() {
         Assert.assertFalse(executorService.isTerminated());
+    }
+
+    @Test
+    public void toString_shutdown() {
+        executorService.shutdown();
+        StringBuilder regexPattern = new StringBuilder();
+        regexPattern.append("SequentialExecutorService\\[")
+                .append("SHUTDOWN")
+                .append(", submittedTasks = ")
+                .append("\\d*")
+                .append(", finishedTasks = ")
+                .append("\\d*")
+                .append("\\]");
+        Pattern pattern = Pattern.compile(regexPattern.toString());
+
+
+        Matcher matcher = pattern.matcher(executorService.toString());
+
+        System.out.println(executorService.toString());
+
+        Assert.assertTrue(matcher.matches());
+    }
+
+    @Test
+    public void toString_ready() {
+        StringBuilder regexPattern = new StringBuilder();
+        regexPattern.append("SequentialExecutorService\\[")
+                .append("READY")
+                .append(", submittedTasks = ")
+                .append("\\d*")
+                .append(", finishedTasks = ")
+                .append("\\d*")
+                .append("\\]");
+        Pattern pattern = Pattern.compile(regexPattern.toString());
+
+
+        Matcher matcher = pattern.matcher(executorService.toString());
+
+        System.out.println(executorService.toString());
+
+        Assert.assertTrue(matcher.matches());
     }
 
 }
