@@ -69,9 +69,9 @@ public class SequentialExecutorServiceTest {
     @Test
     public void invokeAll_Callable() throws ExecutionException, InterruptedException {
         AtomicInteger count = new AtomicInteger(0);
-        Callable<Integer> callable = () -> count.getAndIncrement();
+        Callable<Integer> callable = count::getAndIncrement;
         List<Callable<Integer>> list =
-                Stream.generate(() -> callable).limit(10).collect(Collectors.toList());
+                Stream.generate(() -> callable).limit(10L).collect(Collectors.toList());
         List<Future<Integer>> futures = executorService.invokeAll(list, 0L, null);
 
         Assert.assertEquals(count.get(), 10);
@@ -105,10 +105,10 @@ public class SequentialExecutorServiceTest {
     @Test
     public void invokeAny_Callable() throws ExecutionException, InterruptedException {
         AtomicInteger count = new AtomicInteger(0);
-        Callable<Integer> callable = () -> count.getAndIncrement();
+        Callable<Integer> callable = count::getAndIncrement;
         List<Callable<Integer>> list =
-                Stream.generate(() -> callable).limit(10).collect(Collectors.toList());
-        Integer result = executorService.invokeAny(list, 0L, null);
+                Stream.generate(() -> callable).limit(10L).collect(Collectors.toList());
+        executorService.invokeAny(list, 0L, null);
 
         Assert.assertEquals(count.get(), 1);
     }
@@ -116,20 +116,20 @@ public class SequentialExecutorServiceTest {
     @Test
     public void invokeAny_Callable_Exception() throws ExecutionException, InterruptedException {
         AtomicInteger count = new AtomicInteger(0);
-        Callable<Integer> callable = () -> count.getAndIncrement();
+        Callable<Integer> callable = count::getAndIncrement;
         List<Callable<Integer>> list =
-                Stream.generate(() -> callable).limit(10).collect(Collectors.toList());
+                Stream.generate(() -> callable).limit(10L).collect(Collectors.toList());
         list.add(0, () -> {
                 throw new Exception();
             });
-        Integer result = executorService.invokeAny(list, 0L, null);
+        executorService.invokeAny(list, 0L, null);
 
         Assert.assertEquals(count.get(), 1);
     }
 
     @Test
     public void submit_Callable_immediately() throws ExecutionException, InterruptedException {
-        executorService.setState(ExecutorServiceState.IMMEDIATELY);
+        executorService.setExecutorServiceState(ExecutorServiceState.IMMEDIATELY);
         Callable<Integer> callable = () -> 5;
         Future<Integer> future = executorService.submit(callable);
         Assert.assertTrue(future.isDone());
@@ -138,7 +138,7 @@ public class SequentialExecutorServiceTest {
 
     @Test
     public void submit_Runnable_immediately() throws ExecutionException, InterruptedException {
-        executorService.setState(ExecutorServiceState.IMMEDIATELY);
+        executorService.setExecutorServiceState(ExecutorServiceState.IMMEDIATELY);
         AtomicBoolean gotCalled = new AtomicBoolean(false);
         Future<Void> future = executorService.submit(() -> gotCalled.set(true));
         Assert.assertTrue(future.isDone());
@@ -148,7 +148,7 @@ public class SequentialExecutorServiceTest {
     @Test
     public void submit_Runnable_Result_immediately()
             throws ExecutionException, InterruptedException {
-        executorService.setState(ExecutorServiceState.IMMEDIATELY);
+        executorService.setExecutorServiceState(ExecutorServiceState.IMMEDIATELY);
         Future<Boolean> future = executorService.submit(() -> { }, false);
         Assert.assertTrue(future.isDone());
         Assert.assertFalse(future.get());
@@ -156,7 +156,7 @@ public class SequentialExecutorServiceTest {
 
     @Test(expectedExceptions = ClassNotFoundException.class)
     public void submit_Callable_immediately_thrown() throws Throwable {
-        executorService.setState(ExecutorServiceState.IMMEDIATELY);
+        executorService.setExecutorServiceState(ExecutorServiceState.IMMEDIATELY);
         Callable<Integer> callable = () -> { throw new ClassNotFoundException(); };
         Future<Integer> future = executorService.submit(callable);
         Assert.assertTrue(future.isDone());
@@ -169,7 +169,7 @@ public class SequentialExecutorServiceTest {
 
     @Test
     public void submit_Callable_onCall() throws ExecutionException, InterruptedException {
-        executorService.setState(ExecutorServiceState.ONCALL);
+        executorService.setExecutorServiceState(ExecutorServiceState.ONCALL);
         Callable<Integer> callable = () -> 5;
         Future<Integer> future = executorService.submit(callable);
         Assert.assertFalse(future.isDone());
@@ -178,7 +178,7 @@ public class SequentialExecutorServiceTest {
 
     @Test(expectedExceptions = ClassNotFoundException.class)
     public void submit_Callable_onCall_thrown() throws Throwable {
-        executorService.setState(ExecutorServiceState.ONCALL);
+        executorService.setExecutorServiceState(ExecutorServiceState.ONCALL);
         Callable<Integer> callable = () -> { throw new ClassNotFoundException(); };
         Future<Integer> future = executorService.submit(callable);
         Assert.assertFalse(future.isDone());
@@ -209,7 +209,7 @@ public class SequentialExecutorServiceTest {
     public void shutdownNow() {
         Callable<Void> callable = () -> null;
         List<Future<Void>> futures =
-                Stream.generate(() -> callable).limit(10)
+                Stream.generate(() -> callable).limit(10L)
                         .map(executorService::submitForNotFishingOnTermination)
                         .collect(Collectors.toList());
         List<Runnable> runnables = executorService.shutdownNow();
@@ -218,7 +218,7 @@ public class SequentialExecutorServiceTest {
         Assert.assertTrue(executorService.isShutdownNow());
         Assert.assertFalse(executorService.isTerminated());
 
-        Assert.assertEquals(runnables, futures);
+        Assert.assertEqualsNoOrder(runnables.toArray(), futures.toArray());
     }
 
     @Test
@@ -233,9 +233,8 @@ public class SequentialExecutorServiceTest {
     @Test
     public void shutdownNow_Finished() {
         Callable<Void> callable = () -> null;
-        List<Future<Void>> futures =
-                Stream.generate(() -> callable).limit(10).map(executorService::submit)
-                        .collect(Collectors.toList());
+        Stream.generate(() -> callable).limit(10L).map(executorService::submit)
+                .collect(Collectors.toList());
         List<Runnable> runnables = executorService.shutdownNow();
         Assert.assertTrue(executorService.isShutdownNow());
         Assert.assertFalse(executorService.isJustShutdown());
@@ -251,14 +250,10 @@ public class SequentialExecutorServiceTest {
     @Test(expectedExceptions = InterruptedException.class)
     public void awaitTermination_interrupted() throws Exception {
         executorService.shutdown();
-        TestThread testThread = new TestThread(new Callable<Void>() {
-
-            @Override
-            public Void call() throws Exception {
-                Thread.currentThread().interrupt();
-                executorService.awaitTermination(1L, null);
-                return null;
-            }
+        TestThread testThread = new TestThread(() -> {
+            Thread.currentThread().interrupt();
+            executorService.awaitTermination(1L, null);
+            return null;
         });
 
         testThread.start();
@@ -321,10 +316,7 @@ public class SequentialExecutorServiceTest {
                 .append("\\]");
         Pattern pattern = Pattern.compile(regexPattern.toString());
 
-
         Matcher matcher = pattern.matcher(executorService.toString());
-
-        System.out.println(executorService.toString());
 
         Assert.assertTrue(matcher.matches());
     }
@@ -341,10 +333,7 @@ public class SequentialExecutorServiceTest {
                 .append("\\]");
         Pattern pattern = Pattern.compile(regexPattern.toString());
 
-
         Matcher matcher = pattern.matcher(executorService.toString());
-
-        System.out.println(executorService.toString());
 
         Assert.assertTrue(matcher.matches());
     }

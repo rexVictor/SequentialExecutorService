@@ -23,7 +23,6 @@
 
 package rex.palace.testes;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -32,10 +31,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
 
 /**
  * An API breaking implementation for ExecutorService.
@@ -43,6 +41,11 @@ import java.util.stream.Stream;
  * <p>Its purpose is to test functionality under non parallel conditions.
  */
 public class SequentialExecutorService implements ExecutorService {
+
+    /**
+     * The TaskOrganizer Future handling is delegated to.
+     */
+    private final TaskOrganizer organizer = new TaskOrganizer();
 
     /**
      * Indicates if shutdown was called.
@@ -60,19 +63,9 @@ public class SequentialExecutorService implements ExecutorService {
     private boolean isShutdown = false;
 
     /**
-     * The state this ExecutorService is in.
+     * The ExecutorServiceState this ExecutorService is in.
      */
-    private ExecutorServiceState state = ExecutorServiceState.IMMEDIATELY;
-
-    /**
-     * A list of all submitted tasks.
-     */
-    private final List<RunnableFuture<?>> submittedTasks = new ArrayList<>();
-
-    /**
-     * The tasks which will be successfully run when calling shutdown().
-     */
-    private final List<RunnableFuture<?>> onAwaitTerminatonSuccessfulTasks = new ArrayList<>();
+    private ExecutorServiceState serviceState = ExecutorServiceState.IMMEDIATELY;
 
     /**
      * Creates a new SequentialExecutorService.
@@ -87,7 +80,7 @@ public class SequentialExecutorService implements ExecutorService {
      *
      * @throws RejectedExecutionException if this service is shutdown.
      */
-    protected final void checkIfTaskMayBeSubmitted() {
+    protected final void throwExceptionIfShutdown() {
         if (isShutdown) {
             throw new RejectedExecutionException(
                     "This service has already been shutdown.");
@@ -97,31 +90,20 @@ public class SequentialExecutorService implements ExecutorService {
     @Override
     public <T> T invokeAny(
             Collection<? extends Callable<T>> tasks,
-            long timeout, TimeUnit unit) throws ExecutionException, InterruptedException {
+            long timeout, TimeUnit unit)
+            throws ExecutionException, InterruptedException {
         return invokeAny(tasks);
     }
 
     @Override
     public <T> T invokeAny(Collection<? extends Callable<T>> tasks)
             throws InterruptedException, ExecutionException {
-        checkIfTaskMayBeSubmitted();
-        return tasks.stream().map(ImmediatelyFuture<T>::new).filter(Future::isDone)
-                .filter(SequentialExecutorService::isRegularlyDone)
+        throwExceptionIfShutdown();
+        return tasks.stream()
+                .map(callable -> submit(callable, ExecutorServiceState.IMMEDIATELY))
+                .filter(Future::isDone)
+                .filter(ExecutorServiceHelper::isRegularlyDone)
                 .findAny().get().get();
-    }
-
-    /**
-     * Checks if future terminated regularly.
-     * @param future the future to test for regularly completion.
-     * @return false if and only if calling get() on future results in an exception.
-     */
-    private static boolean isRegularlyDone(Future<?> future) {
-        try {
-            future.get();
-        } catch (InterruptedException | ExecutionException e) {
-            return false;
-        }
-        return true;
     }
 
     @Override
@@ -134,79 +116,58 @@ public class SequentialExecutorService implements ExecutorService {
     @Override
     public <T> List<Future<T>> invokeAll(
             Collection<? extends Callable<T>> tasks) {
-        checkIfTaskMayBeSubmitted();
-        return tasks.stream().map(ImmediatelyFuture<T>::new).collect(Collectors.toList());
-    }
-
-    /**
-     * Converts the Runnable to a Callable.
-     *
-     * @param runnable the runnable to convert
-     * @return a callable calling runnable
-     */
-    private static Callable<Void> convert(Runnable runnable) {
-        return convert(runnable, null);
-    }
-
-    /**
-     * Converts the Runnable to a Callable with specific result.
-     *
-     * @param runnable the runnable to convert
-     * @param result the result the callable shall return
-     * @param <T> the type of result
-     * @return a callable calling runnable and returning result
-     */
-    private static <T> Callable<T> convert(Runnable runnable, T result) {
-        return () -> {
-            runnable.run();
-            return result;
-        };
+        throwExceptionIfShutdown();
+        return tasks.stream().map(this::submit).collect(Collectors.toList());
     }
 
     @Override
     public Future<Void> submit(Runnable task) {
-        return submit(convert(task), state);
+        return submit(task, null);
     }
 
     @Override
     public <T> Future<T> submit(Runnable task, T result) {
-        return submit(convert(task, result), state);
+        return submit(task, serviceState, result);
     }
 
     @Override
     public <T> Future<T> submit(Callable<T> task) {
-        return submit(task, state);
+        return submit(task, serviceState);
+    }
+
+    /**
+     * Submits the Runnable according to the ExecutorServiceState.
+     *
+     * @param runnable the runnable to submit
+     * @param state    the serviceState defining how to submit
+     * @param result   the result the Future shall return
+     * @param <T>      the type of result
+     * @return a Future for runnable
+     */
+    private <T> Future<T> submit(
+            Runnable runnable, ExecutorServiceState state, T result) {
+        return submit(ExecutorServiceHelper.convert(runnable, result), state);
     }
 
     /**
      * Submits the Callable according to the ExecutorServiceState.
      *
      * @param callable the callable to submit
-     * @param serviceState the serviceState defining how to submit
+     * @param state the state defining how to submit
      * @param <T> the type of callable
      * @return a Future for callable
      */
-    private <T> Future<T> submit(Callable<T> callable, ExecutorServiceState serviceState) {
-        checkIfTaskMayBeSubmitted();
-        RunnableFuture<T> future = serviceState.submit(callable);
-        submittedTasks.add(future);
-        return future;
+    private <T> Future<T> submit(
+            Callable<T> callable, ExecutorServiceState state) {
+        throwExceptionIfShutdown();
+        return organizer.submit(state, callable);
     }
 
     @Override
     public List<Runnable> shutdownNow() {
         shutdownNow = true;
         isShutdown = true;
-        return notFinishedTasks().collect(Collectors.toList());
-    }
-
-    /**
-     * Returns a stream of all unfinished tasks.
-     *
-     * @return a stream of all unfinished tasks.
-     */
-    private Stream<? extends Runnable> notFinishedTasks() {
-        return submittedTasks.stream().filter(future -> !future.isDone());
+        return organizer.notFinishedTasks().collect(Collectors.toList());
     }
 
     @Override
@@ -217,29 +178,15 @@ public class SequentialExecutorService implements ExecutorService {
 
     @Override
     public boolean awaitTermination(long timeout, TimeUnit unit)
-                throws InterruptedException {
+            throws InterruptedException {
         if (!isShutdown) {
             return false;
         }
         if (Thread.currentThread().isInterrupted()) {
             throw new InterruptedException();
         }
-        onAwaitTerminatonSuccessfulTasks.stream()
-                .forEach(SequentialExecutorService::getResult);
-        return notFinishedTasks().collect(Collectors.toList()).isEmpty();
-    }
-
-    /**
-     * Makes sure that the calculations in future are done.
-     *
-     * @param future the Future to check
-     */
-    private static void getResult(Future<?> future) {
-        try {
-            future.get();
-        } catch (ExecutionException | InterruptedException expected) {
-            //expected
-        }
+        organizer.awaitTermination();
+        return organizer.notFinishedTasksCount() == 0;
     }
 
     @Override
@@ -247,7 +194,7 @@ public class SequentialExecutorService implements ExecutorService {
         if (!isShutdown) {
             return false;
         }
-        return notFinishedTasks().collect(Collectors.toList()).isEmpty();
+        return organizer.notFinishedTasksCount() == 0;
     }
 
     @Override
@@ -255,29 +202,33 @@ public class SequentialExecutorService implements ExecutorService {
         return isShutdown;
     }
 
+    /**
+     * Executes the given command immediately in the calling thread.
+     *
+     * @param command the command to execute
+     * @throws NullPointerException if command is null
+     */
     @Override
     public void execute(Runnable command) {
-        command.run();
+        submit(command, ExecutorServiceState.IMMEDIATELY, null);
     }
 
     /**
      * Submits a task for termination in time of calling awaitTermination().
      *
      * @param callable the task to be successfully executed on awaitTermination()
-     * @param <T> the type of callable
+     * @param <T>      the type of callable
      * @return a future object which is accessible after awaitTermination() is called
      */
     public <T> Future<T> submitForTerminationInTime(Callable<T> callable) {
-        RunnableFuture<T> future = ExecutorServiceState.ONCALL.submit(callable);
-        onAwaitTerminatonSuccessfulTasks.add(future);
-        return future;
+        return submit(callable, ExecutorServiceState.AWAIT_TERMINATION);
     }
 
     /**
      * Submits a task which will never be run.
      *
      * @param callable the task to never run
-     * @param <T> the type of callable
+     * @param <T>      the type of callable
      * @return the future of this callable
      */
     public <T> Future<T> submitForNotFishingOnTermination(Callable<T> callable) {
@@ -285,13 +236,13 @@ public class SequentialExecutorService implements ExecutorService {
     }
 
     /**
-     * Sets the state of the ExecutorService.
+     * Sets the serviceState of the ExecutorService.
      *
-     * @param state the state to set this ExecutorService in
-     * @throws NullPointerException if state is null
+     * @param state the serviceState to set this ExecutorService in
+     * @throws NullPointerException if serviceState is null
      */
-    public void setState(ExecutorServiceState state) {
-        this.state = Objects.requireNonNull(state);
+    public void setExecutorServiceState(ExecutorServiceState state) {
+        serviceState = Objects.requireNonNull(state);
     }
 
     /**
@@ -315,20 +266,20 @@ public class SequentialExecutorService implements ExecutorService {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(getClass().getSimpleName());
-        sb.append("[");
+        sb.append('[');
         if (isShutdown) {
             sb.append("SHUTDOWN");
         } else {
             sb.append("READY");
         }
         sb.append(", submittedTasks = ")
-                .append(submittedTasks.size())
+                .append(organizer.submittedTasksCount())
                 .append(", finishedTasks = ")
-                .append(submittedTasks.size() - notFinishedTasks().count())
-                .append("]");
-
+                .append(organizer.finishedTasksCount())
+                .append(']');
         return sb.toString();
     }
+
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 expandtab: */

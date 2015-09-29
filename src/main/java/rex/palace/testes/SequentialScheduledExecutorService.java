@@ -63,7 +63,7 @@ public class SequentialScheduledExecutorService
     @Override
     public <V> ScheduledFuture<V> schedule(Callable<V> callable,
             long delay, TimeUnit unit) {
-        checkIfTaskMayBeSubmitted();
+        throwExceptionIfShutdown();
         SequentialScheduledFuture<V> future
                 = SequentialFutures.getDelayed(callable, delay,
                 unit, timeController);
@@ -86,7 +86,7 @@ public class SequentialScheduledExecutorService
     @Override
     public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command,
             long initialDelay, long delay, TimeUnit unit) {
-        checkIfTaskMayBeSubmitted();
+        throwExceptionIfShutdown();
         SequentialScheduledFuture<Object> future;
         if (initialDelay == 0L) {
             future = SequentialFutures.getPeriodic(
@@ -99,6 +99,14 @@ public class SequentialScheduledExecutorService
         }
         scheduledTasks.add(future);
         return future;
+    }
+
+    @Override
+    public boolean awaitTermination(long timeout, TimeUnit unit) {
+        if (isShutdown()) {
+            return false;
+        }
+        return false;
     }
 
 }

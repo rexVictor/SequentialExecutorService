@@ -34,36 +34,55 @@ public enum ExecutorServiceState {
     /**
      * Performs submitted tasks immediately.
      */
-    IMMEDIATELY {
-
-        @Override
-        public <V> RunnableFuture<V> submit(Callable<V> callable) {
-            return SequentialFutures.getImmediately(callable);
-        }
-
-    },
+    IMMEDIATELY(SequentialFutures::getImmediately),
 
     /**
-     * Preforms submitted tasks when the get is called
+     * Performs submitted tasks when get() is called
      * on the Future.
      */
-    ONCALL {
+    ONCALL(SequentialFutures::getOnCall),
 
-        @Override
-        public <V> RunnableFuture<V> submit(Callable<V> callable) {
-            return SequentialFutures.getOnCall(callable);
-        }
-
-    },
     /**
      * Never performs the submitted tasks.
      */
-    NEVER {
-        @Override
-        public <V> RunnableFuture<V> submit(Callable<V> callable) {
-            return SequentialFutures.getNeverDone(callable);
-        }
-    };
+    NEVER(SequentialFutures::getNeverDone),
+
+    /**
+     * Performs the submitted tasks when awaitTermination() is called.
+     */
+    AWAIT_TERMINATION(SequentialFutures::getOnCall);
+
+    /**
+     * An abstract factory interface for Futures.
+     */
+    @FunctionalInterface
+    private interface FutureFactory {
+
+        /**
+         * Creates a RunnableFuture for callable.
+         *
+         * @param callable the task to construct a future for
+         * @param <V> the return type of callable
+         * @return a RunnableFuture for callable
+         */
+        <V> RunnableFuture<V> build(Callable<V> callable);
+
+    }
+
+    /**
+     * The FutureFactory to build Futures.
+     */
+    private final transient FutureFactory factory;
+
+    /**
+     * Constructs an ExecutorServiceState.
+     *
+     * @param factory the FutureFactory to use
+     */
+    ExecutorServiceState(FutureFactory factory) {
+        this.factory = factory;
+    }
+
 
     /**
      * Returns a RunnableFuture behaving according to this ExecutorServiceState.
@@ -72,7 +91,9 @@ public enum ExecutorServiceState {
      * @param <V> the return type of callable
      * @return a RunnableFuture handling callable
      */
-    public abstract <V> RunnableFuture<V> submit(Callable<V> callable);
+    <V> RunnableFuture<V> submit(Callable<V> callable) {
+        return factory.build(callable);
+    }
 
 }
 
