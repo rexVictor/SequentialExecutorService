@@ -23,10 +23,56 @@
 
 package rex.palace.testes;
 
+import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
+
 /**
  * Static factory class for TimeControllers.
  */
 public final class TimeControllers {
+
+    /**
+     * A NOOP implementation of TimeController.
+     */
+    private static final class NopTimeController implements TimeController {
+
+        /**
+         * Creates a new NopTimeController.
+         */
+        private NopTimeController() {
+            super();
+        }
+
+        @Override
+        public void letTimePass(long time, TimeUnit unit) {
+            //does nothing
+        }
+
+        @Override
+        public void register(TimeListener listener) {
+            //does nothing
+        }
+
+        @Override
+        public void unregister(TimeListener listener) {
+            //does nothing
+        }
+
+        @Override
+        public void letTimePassUntil(BooleanSupplier condition) {
+            //does nothing
+        }
+
+        @Override
+        public void letTimePassUntil(
+                BooleanSupplier condition, long time, TimeUnit unit) {
+            //does nothing
+        }
+
+    }
+
+    private static final TimeController NOP_TIME_CONTROLLER
+            = new NopTimeController();
 
     /**
      * Private constructor since this is a utility class.
@@ -40,7 +86,7 @@ public final class TimeControllers {
      * @return a nop implementation of the TimeController interface
      */
     public static TimeController getNop() {
-        return NopTimeController.NOP_TIME_CONTROLLER;
+        return NOP_TIME_CONTROLLER;
     }
 
     /**
@@ -51,6 +97,7 @@ public final class TimeControllers {
     public static TimeController getInstance() {
         return TimeControllerImpl.newInstance();
     }
+
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 expandtab: */

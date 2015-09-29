@@ -152,7 +152,7 @@ public class DelayedPeriodicSequentialFutureTest {
     public void initializeInstanceVariable() {
         callCounter = new CallCounter();
         timeController = TimeControllers.getInstance();
-        future = SequentialFutures.getDelayedPeriodic(
+        future = SequentialScheduledFutures.getDelayedPeriodic(
                 callCounter, 5L, 10L, TimeUnit.NANOSECONDS, timeController);
         mockTimeController = new MockTimeController();
     }
@@ -169,27 +169,27 @@ public class DelayedPeriodicSequentialFutureTest {
 
     @Test(expectedExceptions = NullPointerException.class)
     public void new_nullCallable() {
-        SequentialFutures.getDelayedPeriodic(
+        SequentialScheduledFutures.getDelayedPeriodic(
                 null, 5L, 10L, TimeUnit.NANOSECONDS,
                 TimeControllers.getNop());
     }
 
     @Test(expectedExceptions = NullPointerException.class)
     public void new_nullUnit() {
-        SequentialFutures.getDelayedPeriodic(
+        SequentialScheduledFutures.getDelayedPeriodic(
                 callCounter, 5L, 10L, null, TimeControllers.getNop());
     }
 
     @Test(expectedExceptions = NullPointerException.class)
     public void new_nullController() {
-        SequentialFutures.getDelayedPeriodic(
+        SequentialScheduledFutures.getDelayedPeriodic(
                 callCounter, 5L, 10L, TimeUnit.NANOSECONDS, null);
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class,
             dataProvider = "nonPositiveLongs")
     public void new_NonPositiveDuration(long duration) {
-        SequentialFutures.getDelayedPeriodic(
+        SequentialScheduledFutures.getDelayedPeriodic(
                 callCounter, duration, 10L, TimeUnit.NANOSECONDS,
                 TimeControllers.getNop());
     }
@@ -197,7 +197,7 @@ public class DelayedPeriodicSequentialFutureTest {
     @Test
     public void new_registersAtTimeController() {
         TimeListener futureToRegister
-                = SequentialFutures.getDelayedPeriodic(
+                = SequentialScheduledFutures.getDelayedPeriodic(
                 callCounter, 10L, 5L, TimeUnit.NANOSECONDS, mockTimeController);
 
         Assert.assertSame(mockTimeController.registered, futureToRegister);

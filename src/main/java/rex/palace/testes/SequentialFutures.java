@@ -24,7 +24,7 @@
 package rex.palace.testes;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Static factory class for SequentialFutures.
@@ -32,74 +32,77 @@ import java.util.concurrent.TimeUnit;
 final class SequentialFutures {
 
     /**
+     * This is a Future, which performs the task it is constructed with immediately.
+     *
+     * @param <V> the result type of this Future
+     */
+    private static class ImmediatelyFuture<V> extends AbstractSequentialFuture<V> {
+
+        /**
+         * Creates a new ImmediatelyFuture and runs the Callable.
+         * @param callable the callable to run
+         */
+        ImmediatelyFuture(Callable<V> callable) {
+            super(callable);
+            run();
+        }
+
+        @Override
+        public final void run() {
+            super.run();
+        }
+
+    }
+
+    /**
+     * A Future implementation for the SequentialExecutionService.
+     * @param <T> the type this future holds.
+     */
+    private static class NeverDoneFuture<T> extends AbstractSequentialFuture<T> {
+
+        /**
+         * Creates a new NeverDoneFuture.
+         * @param callable the callable to never run
+         */
+        NeverDoneFuture(Callable<T> callable) {
+            super(callable);
+        }
+
+        @Override
+        public T get() throws ExecutionException {
+            throw new ExecutionException("I am never done!", null);
+        }
+
+    }
+
+    /**
+     * This is a Future, which performs the task it is constructed with when get() is called.
+     *
+     * @param <V> the result type of this Future
+     */
+    private static class OnCallFuture<V> extends AbstractSequentialFuture<V> {
+
+        /**
+         * Creates a new OnCallFuture.
+         * @param callable the callable to run when get() is called.
+         */
+        OnCallFuture(Callable<V> callable) {
+            super(callable);
+        }
+
+        @Override
+        public V get() throws ExecutionException, InterruptedException {
+            run();
+            return super.get();
+        }
+
+    }
+
+    /**
      * Private constructor since this is a utility class.
      */
     private SequentialFutures() {
         super();
-    }
-
-    /**
-     * Creates a SequentialScheduledFuture which gets run
-     * after an initial delay.
-     *
-     * @param callable the task to run
-     * @param initialDelay the delay before callable is run
-     * @param timeUnit the TimeUnit of initialDelay
-     * @param timeController the timeController which simulates time
-     * @param <T> the return type of callable
-     * @return a ScheduledFuture with an initial delay
-     * @throws NullPointerException if callable, timeUnit or
-     *         timeController is null
-     * @throws IllegalArgumentException if initialDelay is not positive
-     */
-    static <T> SequentialScheduledFuture<T> getDelayed(
-            Callable<T> callable, long initialDelay,
-            TimeUnit timeUnit, TimeController timeController) {
-        return new DelayedSequentialFuture<>(
-                callable, initialDelay, timeUnit, timeController);
-    }
-
-    /**
-     * Creates a SequentialScheduledFuture which gets run periodically.
-     *
-     * @param callable the task to run
-     * @param period the period callable is rerun with
-     * @param timeUnit the TimeUnit of period
-     * @param timeController the timeController which simulates time
-     * @param <T> the return type of callable
-     * @return a ScheduledFuture with is rerun periodically
-     * @throws NullPointerException if callable, timeUnit or
-     *         timeController is null
-     * @throws IllegalArgumentException if period is not positive
-     */
-    static <T> SequentialScheduledFuture<T> getPeriodic(
-            Callable<T> callable, long period,
-            TimeUnit timeUnit, TimeController timeController) {
-        return new PeriodicSequentialFuture<>(
-                callable, period, timeUnit, timeController);
-    }
-
-    /**
-     * Creates a SequentialScheduledFuture which gets run periodically
-     * after an initial delay.
-     *
-     * @param callable the task to run
-     * @param initialDelay the delay before callable is run
-     * @param period the period callable is rerun with
-     * @param timeUnit the TimeUnit of period
-     * @param timeController the timeController which simulates time
-     * @param <T> the return type of callable
-     * @return a ScheduledFuture with is rerun periodically
-     * @throws NullPointerException if callable, timeUnit or
-     *         timeController is null
-     * @throws IllegalArgumentException if period or initialDelay
-     *         is not positive
-     */
-    static <T> SequentialScheduledFuture<T> getDelayedPeriodic(
-            Callable<T> callable, long initialDelay, long period,
-            TimeUnit timeUnit, TimeController timeController) {
-        return new DelayedPeriodicSequentialFuture<>(
-                callable, initialDelay, period, timeUnit, timeController);
     }
 
     /**
@@ -110,7 +113,7 @@ final class SequentialFutures {
      * @return a Future containing the result of callable
      * @throws NullPointerException if callable is null
      */
-    static <T> SequentialCallbackFuture<T> getImmediately(Callable<T> callable) {
+    static <T> SequentialFuture<T> getImmediately(Callable<T> callable) {
         return new ImmediatelyFuture<>(callable);
     }
 
@@ -122,7 +125,7 @@ final class SequentialFutures {
      * @return a Future running callable when get() is called
      * @throws NullPointerException if callable is null
      */
-    static <T> SequentialCallbackFuture<T> getOnCall(Callable<T> callable) {
+    static <T> SequentialFuture<T> getOnCall(Callable<T> callable) {
         return new OnCallFuture<>(callable);
     }
 
@@ -134,7 +137,7 @@ final class SequentialFutures {
      * @return a Future which will never be ready
      * @throws NullPointerException if callable is null
      */
-    static <T> SequentialCallbackFuture<T> getNeverDone(Callable<T> callable) {
+    static <T> SequentialFuture<T> getNeverDone(Callable<T> callable) {
         return new NeverDoneFuture<>(callable);
     }
 

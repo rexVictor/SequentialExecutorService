@@ -91,7 +91,7 @@ public class DelayedSequentialFutureTest {
     @BeforeMethod
     public void initializeInstanceVariables() {
         timeController = TimeControllers.getInstance();
-        future = SequentialFutures.getDelayed(() -> null, 10L,
+        future = SequentialScheduledFutures.getDelayed(() -> null, 10L,
                 TimeUnit.MILLISECONDS, timeController);
     }
 
@@ -150,7 +150,7 @@ public class DelayedSequentialFutureTest {
     @Test
     public void get_limited() throws InterruptedException, ExecutionException, TimeoutException {
         SequentialScheduledFuture<Integer> integerFuture
-                = SequentialFutures.getDelayed(() -> 5,
+                = SequentialScheduledFutures.getDelayed(() -> 5,
                 10L, TimeUnit.MILLISECONDS, timeController);
         Assert.assertEquals(integerFuture.get(11L, TimeUnit.MILLISECONDS), Integer.valueOf(5));
     }
@@ -174,7 +174,7 @@ public class DelayedSequentialFutureTest {
                 = Pattern.compile(regexPattern.toString());
 
         SequentialScheduledFuture<Void> future
-                = SequentialFutures.getDelayed(
+                = SequentialScheduledFutures.getDelayed(
                 () -> null, 10L, TimeUnit.NANOSECONDS, TimeControllers.getNop());
 
         Matcher matcher = pattern.matcher(future.toString());

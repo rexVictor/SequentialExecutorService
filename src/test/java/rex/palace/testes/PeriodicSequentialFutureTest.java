@@ -165,7 +165,7 @@ public class PeriodicSequentialFutureTest {
     public void initializeInstanceVariable() {
         callCounter = new CallCounter();
         timeController = TimeControllers.getInstance();
-        future = SequentialFutures.getPeriodic(
+        future = SequentialScheduledFutures.getPeriodic(
                 callCounter, 10L, TimeUnit.NANOSECONDS, timeController);
         mockTimeController = new MockTimeController();
     }
@@ -182,26 +182,26 @@ public class PeriodicSequentialFutureTest {
 
     @Test(expectedExceptions = NullPointerException.class)
     public void new_nullCallable() {
-        SequentialFutures.getPeriodic(
+        SequentialScheduledFutures.getPeriodic(
                 null, 10L, TimeUnit.NANOSECONDS, TimeControllers.getNop());
     }
 
     @Test(expectedExceptions = NullPointerException.class)
     public void new_nullUnit() {
-        SequentialFutures.getPeriodic(
+        SequentialScheduledFutures.getPeriodic(
                 callCounter, 10L, null, TimeControllers.getNop());
     }
 
     @Test(expectedExceptions = NullPointerException.class)
     public void new_nullController() {
-        SequentialFutures.getPeriodic(
+        SequentialScheduledFutures.getPeriodic(
                 callCounter, 10L, TimeUnit.NANOSECONDS, null);
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class,
             dataProvider = "nonPositiveLongs")
     public void new_NonPositiveDuration(long duration) {
-        SequentialFutures.getPeriodic(
+        SequentialScheduledFutures.getPeriodic(
                 callCounter, duration, TimeUnit.NANOSECONDS,
                 TimeControllers.getNop());
     }
@@ -209,7 +209,7 @@ public class PeriodicSequentialFutureTest {
     @Test
     public void new_registersAtTimeController() {
         TimeListener futureToRegister =
-                SequentialFutures.getPeriodic(
+                SequentialScheduledFutures.getPeriodic(
                         callCounter, 10L, TimeUnit.NANOSECONDS, mockTimeController);
 
         Assert.assertSame(mockTimeController.registered, futureToRegister);
@@ -355,7 +355,7 @@ public class PeriodicSequentialFutureTest {
                 = Pattern.compile(regexPattern.toString());
 
         SequentialScheduledFuture<Void> future
-                = SequentialFutures.getPeriodic(
+                = SequentialScheduledFutures.getPeriodic(
                 () -> null, 10L, TimeUnit.NANOSECONDS, TimeControllers.getNop());
 
         Matcher matcher = pattern.matcher(future.toString());

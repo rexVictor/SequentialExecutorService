@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @param <T> the return type of this Future
  */
-public interface SequentialScheduledFuture<T>
+interface SequentialScheduledFuture<T>
         extends SequentialFuture<T>, ScheduledFuture<T>, TimeListener {
 
     @Override

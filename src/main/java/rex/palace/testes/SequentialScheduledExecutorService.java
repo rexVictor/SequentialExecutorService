@@ -69,7 +69,7 @@ public class SequentialScheduledExecutorService
             long delay, TimeUnit unit) {
         throwExceptionIfShutdown();
         SequentialScheduledFuture<V> future
-                = SequentialFutures.getDelayed(callable, delay,
+                = SequentialScheduledFutures.getDelayed(callable, delay,
                 unit, timeController);
         scheduledTasks.add(future);
         return future;
@@ -93,11 +93,11 @@ public class SequentialScheduledExecutorService
         throwExceptionIfShutdown();
         SequentialScheduledFuture<Object> future;
         if (initialDelay == 0L) {
-            future = SequentialFutures.getPeriodic(
+            future = SequentialScheduledFutures.getPeriodic(
                     Executors.callable(command), delay, unit, timeController);
             future.timePassed(delay, unit);
         } else {
-            future = SequentialFutures.getDelayedPeriodic(
+            future = SequentialScheduledFutures.getDelayedPeriodic(
                     Executors.callable(command), initialDelay,
                     delay, unit, timeController);
         }

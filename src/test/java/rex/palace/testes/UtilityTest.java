@@ -23,28 +23,31 @@
 
 package rex.palace.testes;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
+import org.testng.Assert;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+import rex.palace.testhelp.ArgumentConverter;
+import rex.palace.testhelp.UtilityCheck;
+
+import java.util.Iterator;
 
 /**
- * A Future implementation for the SequentialExecutionService.
- * @param <T> the type this future holds.
+ * Tests if classes are utility classes.
  */
-class NeverDoneFuture<T> extends AbstractSequentialFuture<T> {
+public class UtilityTest {
 
-    /**
-     * Creates a new NeverDoneFuture.
-     * @param callable the callable to never run
-     */
-    NeverDoneFuture(Callable<T> callable) {
-        super(callable);
+    @DataProvider(name = "utilityClasses")
+    public Iterator<Object[]> getUtilityClasses() {
+        return ArgumentConverter.convert(
+                ExecutorServiceHelper.class,
+                SequentialFutures.class,
+                SequentialScheduledFutures.class,
+                TimeControllers.class);
     }
 
-    @Override
-    public T get() throws ExecutionException {
-        throw new ExecutionException("I am never done!", null);
+    @Test(dataProvider = "utilityClasses")
+    public void testIfUtility(Class<?> clazz) {
+        Assert.assertTrue(UtilityCheck.isUtilityClass(clazz));
     }
 
 }
-
-/* vim:set shiftwidth=4 softtabstop=4 expandtab: */

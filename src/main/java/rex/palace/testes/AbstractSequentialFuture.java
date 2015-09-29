@@ -33,8 +33,7 @@ import java.util.concurrent.TimeoutException;
  *
  * @param <T> the type this future holds.
  */
-abstract class AbstractSequentialFuture<T>
-        implements SequentialCallbackFuture<T> {
+abstract class AbstractSequentialFuture<T> implements SequentialFuture<T> {
 
     /**
      * Indicates if this task has been cancelled.
@@ -69,22 +68,6 @@ abstract class AbstractSequentialFuture<T>
      */
     AbstractSequentialFuture(Callable<T> callable) {
         wrapper = new CallableWrapper<>(this, callable);
-    }
-
-    /**
-     * Since nothing runs parallel, this method just delegates to get().
-     *
-     * @param timeout discarded
-     * @param unit discarded
-     * @return the result of this task
-     * @throws ExecutionException if an exception occurred during this task
-     * @throws InterruptedException if the calling thread is interrupted
-     * @throws TimeoutException in this class never; subclasses may throw
-     */
-    @Override
-    public T get(long timeout, TimeUnit unit)
-            throws ExecutionException, InterruptedException, TimeoutException {
-        return get();
     }
 
     @Override
@@ -144,6 +127,10 @@ abstract class AbstractSequentialFuture<T>
         return exception != null;
     }
 
+    /**
+     * A helper method for toString().
+     * @return a String representation of the relevant fields
+     */
     protected String toStringHelper() {
         StringBuilder sb = new StringBuilder("task = ")
                 .append(wrapper)
@@ -166,7 +153,7 @@ abstract class AbstractSequentialFuture<T>
 
     @Override
     public String toString() {
-        return "SequentialFuture [" + toStringHelper() + "]";
+        return "SequentialFuture [" + toStringHelper() + ']';
     }
 
 }

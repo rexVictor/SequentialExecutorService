@@ -23,14 +23,17 @@
 
 package rex.palace.testes;
 
-import java.util.concurrent.Future;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.RunnableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * An extension of Future used for testing under non parallel conditions.
  *
  * @param <T> the type of the result
  */
-public interface SequentialFuture<T> extends Future<T> {
+interface SequentialFuture<T> extends RunnableFuture<T> {
 
     /**
      * Returns if this task has already been run.
@@ -44,6 +47,38 @@ public interface SequentialFuture<T> extends Future<T> {
      *         been run without exceptions and true otherwise
      */
     boolean isExceptionHappened();
+
+    /**
+     * Callback method used by {@link CallableWrapper}, which is
+     * called if an exception occurred during the run.
+     *
+     * @param exception the exception which occurred. It is never null.
+     */
+    void setException(Exception exception);
+
+    /**
+     * Callback method used by {@link CallableWrapper}, which is
+     * called if the run was successful.
+     *
+     * @param result the result of this task
+     */
+    void setResult(T result);
+
+    /**
+     * The default implementation just delegates to get().
+     *
+     * @param timeout discarded
+     * @param unit discarded
+     * @return the result of this task
+     * @throws ExecutionException if an exception occurred during this task
+     * @throws InterruptedException if the calling thread is interrupted
+     * @throws TimeoutException if the timeout occurred
+     */
+    @Override
+    default T get(long timeout, TimeUnit unit)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        return get();
+    }
 
 }
 

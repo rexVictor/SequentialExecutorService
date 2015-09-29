@@ -26,6 +26,7 @@ package rex.palace.testes;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.RunnableFuture;
 
 /**
  * A Runnable implementation wrapping a callable for a Future.
@@ -37,7 +38,7 @@ class CallableWrapper<T> implements Runnable {
     /**
      * The SequentialCallbackFuture callbacks are done to.
      */
-    private final SequentialCallbackFuture<T> sequentialFuture;
+    private final SequentialFuture<T> sequentialFuture;
 
     /**
      * The Callable being wrapped.
@@ -52,7 +53,7 @@ class CallableWrapper<T> implements Runnable {
      * @throws NullPointerException if sequentialFuture or callable is null
      */
     CallableWrapper(
-            SequentialCallbackFuture<T> sequentialFuture,
+            SequentialFuture<T> sequentialFuture,
             Callable<T> callable) {
         this.sequentialFuture = Objects.requireNonNull(
                 sequentialFuture,
