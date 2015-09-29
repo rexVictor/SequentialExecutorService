@@ -26,11 +26,7 @@ package rex.palace.testes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * An API breaking implementation of ScheduledExecutorService.
@@ -102,11 +98,23 @@ public class SequentialScheduledExecutorService
     }
 
     @Override
-    public boolean awaitTermination(long timeout, TimeUnit unit) {
+    public boolean awaitTermination(long timeout, TimeUnit unit)
+            throws InterruptedException {
         if (isShutdown()) {
             return false;
         }
-        return false;
+        if (Thread.currentThread().isInterrupted()) {
+            throw new InterruptedException();
+        }
+        try {
+            timeController.letTimePassUntil(
+                    () -> scheduledTasks.stream().allMatch(Future::isDone),
+                    timeout, unit);
+        } catch (TimeoutException e) {
+            //expected
+            return false;
+        }
+        return super.awaitTermination(timeout, unit);
     }
 
 }
