@@ -9,6 +9,7 @@
 *.ear
 
 build/
+doc/
 .gradle/
 .syntastic_javac_config
 *.swp

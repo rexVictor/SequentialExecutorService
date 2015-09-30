@@ -52,6 +52,13 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
     from javadoc.destinationDir
 }
 
+task developerDoc(type: Javadoc) {
+    source = sourceSets.main.allJava
+    options.memberLevel = JavadocMemberLevel.PRIVATE
+    classpath = configurations.compile
+    destinationDir = file("./doc/")
+}
+
 artifacts {
     archives sourcesJar
     archives javadocJar
