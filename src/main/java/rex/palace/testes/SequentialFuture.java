@@ -65,14 +65,10 @@ interface SequentialFuture<T> extends RunnableFuture<T> {
     void setResult(T result);
 
     /**
-     * The default implementation just delegates to get().
+     * {@inheritDoc}
      *
-     * @param timeout discarded
-     * @param unit discarded
-     * @return the result of this task
-     * @throws ExecutionException if an exception occurred during this task
-     * @throws InterruptedException if the calling thread is interrupted
-     * @throws TimeoutException if the timeout occurred
+     * <p>The default implementation just delegates to {@link #get()}.
+     *
      */
     @Override
     default T get(long timeout, TimeUnit unit)

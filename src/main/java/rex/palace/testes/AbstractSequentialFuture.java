@@ -24,9 +24,8 @@
 package rex.palace.testes;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * An abstract implementation of a SequentialFuture.
@@ -72,8 +71,16 @@ abstract class AbstractSequentialFuture<T> implements SequentialFuture<T> {
 
     @Override
     public T get() throws ExecutionException, InterruptedException {
+        if (cancelled) {
+            throw new CancellationException("Task was cancelled.");
+        }
         if (Thread.currentThread().isInterrupted()) {
             throw new InterruptedException();
+        }
+        if (!hasRun()) {
+            while (!Thread.currentThread().isInterrupted()) {
+                Thread.sleep(1L);
+            }
         }
         if (exception == null) {
             return result;
