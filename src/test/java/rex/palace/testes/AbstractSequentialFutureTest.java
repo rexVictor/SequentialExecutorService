@@ -88,7 +88,7 @@ public class AbstractSequentialFutureTest {
     /**
      * The AbstractSequentialFuture to run tests on.
      */
-    private AbstractSequentialFuture<Integer> future;
+    private SequentialFutures.AbstractSequentialFuture<Integer> future;
 
     /**
      * Empty Constructor.
@@ -104,7 +104,7 @@ public class AbstractSequentialFutureTest {
     @BeforeMethod
     public void initializeInstanceVariables() {
         callCounter = new CallCounter();
-        future = new AbstractSequentialFuture<Integer>(callCounter) { };
+        future = new SequentialFutures.AbstractSequentialFuture<Integer>(callCounter) { };
     }
 
     /**
@@ -120,7 +120,7 @@ public class AbstractSequentialFutureTest {
 
     @Test(expectedExceptions = NullPointerException.class)
     public void new_nullCallable() {
-        new AbstractSequentialFuture<Void>(null) { };
+        new SequentialFutures.AbstractSequentialFuture<Void>(null) { };
     }
 
     @Test(expectedExceptions = CancellationException.class)

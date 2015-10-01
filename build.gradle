@@ -56,7 +56,16 @@ task developerDoc(type: Javadoc) {
     source = sourceSets.main.allJava
     options.memberLevel = JavadocMemberLevel.PRIVATE
     classpath = configurations.compile
-    destinationDir = file("./doc/")
+    destinationDir = file("devDoc/")
+}
+
+clean {
+    delete "doc"
+    delete "devDoc"
+}
+
+javadoc {
+    destinationDir = file("doc/")
 }
 
 artifacts {

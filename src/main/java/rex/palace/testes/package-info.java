@@ -22,10 +22,38 @@
  */
 
 /**
- * This package provides API breaking implementations of ExecutorService
- * for testing purposes.
+ * This package provides API breaking implementations of
+ * {@link java.util.concurrent.ExecutorService} and
+ * {@link java.util.concurrent.ScheduledExecutorService}.
  *
  * <p>The implementations don't do the tasks parallel but sequential.
+ *
+ * <p>These implementations can be used to test implementations using
+ * instances of ExecutorService or ScheduledExecutorService under non-parallel,
+ * deterministic conditions.
+ *
+ * <p>Although this undermines the purpose of these interfaces, this
+ * implementation tries to be very accurate regarding handling of
+ * interruptions, so that every scenario can be triggered and tested.
+ *
+ * <p>The classes concerning ExecutorService are
+ * {@link rex.palace.testes.SequentialExecutorService} and
+ * {@link rex.palace.testes.ExecutorServiceState}. The former
+ * adds also a few methods which can be used for mocks. The latter is used
+ * to simulate real conditions.
+ *
+ * <p>The classes concerning ScheduledExecutorService are
+ * {@link rex.palace.testes.SequentialScheduledExecutorService} and
+ * {@link rex.palace.testes.TimeController}. The former also has
+ * the mock methods. The latter is an Interface, for which instances
+ * can be obtained by {@link rex.palace.testes.TimeControllers}, which
+ * simulates a real time flow deterministically.
+ *
+ * @see rex.palace.testes.SequentialExecutorService
+ * @see rex.palace.testes.SequentialScheduledExecutorService
+ * @see rex.palace.testes.TimeController
+ * @see rex.palace.testes.TimeControllers
+ * @see rex.palace.testes.ExecutorServiceState
  */
 package rex.palace.testes;
 

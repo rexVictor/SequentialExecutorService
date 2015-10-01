@@ -25,18 +25,17 @@ package rex.palace.testes;
 
 import java.util.Objects;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.RunnableFuture;
 
 /**
- * A Runnable implementation wrapping a callable for a Future.
+ * A {@link Runnable} implementation wrapping a {@link Callable} for a
+ * {@link SequentialFuture}.
  *
- * @param <T> the result type of the wrapped callable
+ * @param <T> the result type of the wrapped Callable
  */
 class CallableWrapper<T> implements Runnable {
 
     /**
-     * The SequentialCallbackFuture callbacks are done to.
+     * The SequentialFuture callbacks are done to.
      */
     private final SequentialFuture<T> sequentialFuture;
 
@@ -46,10 +45,11 @@ class CallableWrapper<T> implements Runnable {
     private final Callable<T> callable;
 
     /**
-     * Creates a new CallableWrapper.
+     * Constructs a new CallableWrapper running the specified {@link Callable}.
      *
-     * @param sequentialFuture the SequentialFuture callbacks are done to
-     * @param callable the callable to wrap
+     * @param sequentialFuture the {@link SequentialFuture} callbacks
+     *                         are done to
+     * @param callable the Callable to run
      * @throws NullPointerException if sequentialFuture or callable is null
      */
     CallableWrapper(
@@ -63,17 +63,17 @@ class CallableWrapper<T> implements Runnable {
     }
 
     /**
-     * Runs the given callable if sequentialFuture is not cancelled and
-     * calls the callback commands of sequentialFuture when the result is ready or
-     * an exception occurred.
+     * Runs {@link #callable} if {@link #sequentialFuture} is not cancelled and
+     * calls the callback commands of sequentialFuture when the result is ready
+     * or an exception occurred.
      *
-     * @throws CancellationException if sequentialFuture is cancelled
+     * @throws java.util.concurrent.CancellationException if sequentialFuture
+     *         is cancelled
      */
     @Override
     public void run() {
         if (sequentialFuture.isCancelled()) {
-            throw new CancellationException(
-                    "This task has been cancelled, so it will not run.");
+            ExecutorServiceHelper.throwCancellationException();
         }
         try {
             T call = callable.call();
@@ -83,6 +83,11 @@ class CallableWrapper<T> implements Runnable {
         }
     }
 
+    /**
+     * Returns the String representation of {@link #callable}.
+     *
+     * @return {@code callable.toString()}
+     */
     @Override
     public String toString() {
         return callable.toString();

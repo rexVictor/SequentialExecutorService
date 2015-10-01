@@ -29,7 +29,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * An extension of Future used for testing under non parallel conditions.
+ * An extension of {@link RunnableFuture} used for non-parallel conditions.
+ *
+ * <p>It concretes the Future type returned by {@link SequentialExecutorService}
+ * and {@link SequentialScheduledExecutorService} and
+ * provides callback methods for {@link CallableWrapper}.
+ *
+ * <p>It also has some methods to check if the task has been run
+ * and if an exception happened during that run.
  *
  * @param <T> the type of the result
  */
@@ -64,16 +71,13 @@ interface SequentialFuture<T> extends RunnableFuture<T> {
      */
     void setResult(T result);
 
-    /**
-     * {@inheritDoc}
-     *
-     * <p>The default implementation just delegates to {@link #get()}.
-     *
-     */
     @Override
     default T get(long timeout, TimeUnit unit)
             throws ExecutionException, InterruptedException, TimeoutException {
-        return get();
+        if (isDone()) {
+            return get();
+        }
+        throw new TimeoutException("Task is never done.");
     }
 
 }

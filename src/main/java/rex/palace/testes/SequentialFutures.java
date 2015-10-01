@@ -24,7 +24,6 @@
 package rex.palace.testes;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -33,6 +32,159 @@ import java.util.concurrent.TimeoutException;
  * Static factory class for SequentialFutures.
  */
 final class SequentialFutures {
+
+    /**
+     * An abstract implementation of a SequentialFuture.
+     *
+     * @param <T> the type this future holds.
+     */
+    abstract static class AbstractSequentialFuture<T> implements SequentialFuture<T> {
+
+        /**
+         * Indicates if this task has been cancelled.
+         */
+        protected boolean cancelled = false;
+
+        /**
+         * Indicates if this task has been run.
+         */
+        protected boolean ran = false;
+
+        /**
+         * The Exception which occurred during the run.
+         */
+        private Exception exception;
+
+        /**
+         * The result of the run.
+         */
+        private T result;
+
+        /**
+         * The CallableWrapper providing the run method.
+         */
+        private final CallableWrapper<T> wrapper;
+
+        /**
+         * Constructs a new AbstractSequentialFuture with the specified task.
+         *
+         * @param callable the task to run
+         * @throws NullPointerException if callable is null
+         */
+        AbstractSequentialFuture(Callable<T> callable) {
+            wrapper = new CallableWrapper<>(this, callable);
+        }
+
+        /**
+         * Returns the result of this task if it has been run.
+         *
+         * <p>If it has not run, it blocks the current Thread until
+         * it is interrupted or the result is available, but beware:
+         * This class was designed for a non-parallel environment. So
+         * if the result is not available this method might block for eternity.
+         *
+         * @return the result of this task
+         * @throws ExecutionException if this task threw an Exception
+         * @throws InterruptedException if this task is not cancelled and
+         *         the current Thread is interrupted
+         * @throws java.util.concurrent.CancellationException if
+         *         this task got cancelled.
+         */
+        @Override
+        public T get() throws ExecutionException, InterruptedException {
+            if (cancelled) {
+                ExecutorServiceHelper.throwCancellationException();
+            }
+            if (Thread.currentThread().isInterrupted()) {
+                ExecutorServiceHelper.throwInterruptedGetException();
+            }
+            if (!hasRun()) {
+                while (!Thread.currentThread().isInterrupted()) {
+                    Thread.sleep(1L);
+                }
+            }
+            if (exception == null) {
+                return result;
+            }
+            throw new ExecutionException(exception);
+        }
+
+
+        @Override
+        public void run() {
+            wrapper.run();
+            ran = true;
+        }
+
+        @Override
+        public void setException(Exception exception) {
+            this.exception = exception;
+        }
+
+        @Override
+        public void setResult(T result) {
+            this.result = result;
+        }
+
+        @Override
+        public boolean isDone() {
+            return cancelled || ran;
+        }
+
+        @Override
+        public boolean isCancelled() {
+            return cancelled;
+        }
+
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            if (isDone()) {
+                return false;
+            }
+            cancelled = true;
+            return true;
+        }
+
+        @Override
+        public boolean hasRun() {
+            return ran;
+        }
+
+        @Override
+        public boolean isExceptionHappened() {
+            return exception != null;
+        }
+
+        /**
+         * A helper method for toString().
+         * @return a String representation of the relevant fields
+         */
+        protected String toStringHelper() {
+            StringBuilder sb = new StringBuilder("task = ")
+                    .append(wrapper)
+                    .append(", state = ");
+            if (cancelled) {
+                sb.append("cancelled");
+            } else if (isDone()) {
+                sb.append("done ");
+                if (isExceptionHappened()) {
+                    sb.append("failure: ")
+                            .append(exception.getClass().getName());
+                } else {
+                    sb.append("result: ").append(result);
+                }
+            } else {
+                sb.append("running");
+            }
+            return sb.toString();
+        }
+
+        @Override
+        public String toString() {
+            return "SequentialFuture [" + toStringHelper() + ']';
+        }
+
+    }
 
     /**
      * This is a {@link java.util.concurrent.RunnableFuture}, which performs
@@ -132,19 +284,6 @@ final class SequentialFutures {
             return false;
         }
 
-        @Override
-        public T get(long timeout, TimeUnit unit)
-                throws TimeoutException, InterruptedException {
-            if (cancelled) {
-                throw new CancellationException("Task was cancelled.");
-            }
-            if (Thread.currentThread().isInterrupted()) {
-                throw new InterruptedException(
-                        "Interrupted before the result was ready.");
-            }
-            throw new TimeoutException("Task is never done.");
-        }
-
     }
 
     /**
@@ -196,6 +335,12 @@ final class SequentialFutures {
         public T get() throws ExecutionException, InterruptedException {
             run();
             return super.get();
+        }
+
+        @Override
+        public T get(long timeout, TimeUnit timeUnit)
+                throws ExecutionException, InterruptedException {
+            return get();
         }
 
     }

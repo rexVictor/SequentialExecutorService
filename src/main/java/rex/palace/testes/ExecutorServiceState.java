@@ -32,23 +32,23 @@ import java.util.concurrent.RunnableFuture;
 public enum ExecutorServiceState {
 
     /**
-     * Performs submitted tasks immediately.
+     * Perform submitted tasks immediately.
      */
     IMMEDIATELY(SequentialFutures::getImmediately),
 
     /**
-     * Performs submitted tasks when get() is called
-     * on the Future.
+     * Perform submitted tasks when get() is called
+     * on returned Futures.
      */
     ONCALL(SequentialFutures::getOnCall),
 
     /**
-     * Never performs the submitted tasks.
+     * Never perform submitted tasks.
      */
     NEVER(SequentialFutures::getNeverDone),
 
     /**
-     * Performs the submitted tasks when awaitTermination() is called.
+     * Perform submitted tasks when awaitTermination() is called.
      */
     AWAIT_TERMINATION(SequentialFutures::getOnCall);
 
@@ -83,13 +83,12 @@ public enum ExecutorServiceState {
         this.factory = factory;
     }
 
-
     /**
-     * Returns a RunnableFuture behaving according to this ExecutorServiceState.
+     * Returns a {@link RunnableFuture} according to this ExecutorServiceState.
      *
-     * @param callable the callable this future shall handle
+     * @param callable the {@link Callable} to get a Future for
      * @param <V> the return type of callable
-     * @return a RunnableFuture handling callable
+     * @return a RunnableFuture for callable
      */
     <V> RunnableFuture<V> submit(Callable<V> callable) {
         return factory.build(callable);

@@ -23,8 +23,13 @@
 
 package rex.palace.testes;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
+import java.util.stream.Collectors;
 
 /**
  * Static factory class for TimeControllers.
@@ -71,6 +76,52 @@ public final class TimeControllers {
 
     }
 
+    /**
+     * An implementation of the TimeController interface.
+     */
+    private static final class TimeControllerImpl implements TimeController {
+
+        /**
+         * The registered TimeListeners.
+         */
+        private final Collection<TimeListener> listeners = new HashSet<>();
+
+        /**
+         * Creates a new TimeController.
+         */
+        private TimeControllerImpl() {
+            super();
+        }
+
+        @Override
+        public void letTimePass(long time, TimeUnit unit) {
+            Set<TimeListener> toRemove =
+                    listeners.stream().filter(
+                            listener -> listener.timePassed(time, unit)
+                    ).collect(Collectors.toSet());
+            listeners.removeAll(toRemove);
+        }
+
+        @Override
+        public void register(TimeListener listener) {
+            listeners.add(Objects.requireNonNull(listener));
+        }
+
+        @Override
+        public void unregister(TimeListener listener) {
+            listeners.remove(Objects.requireNonNull(listener));
+        }
+
+        @Override
+        public String toString() {
+            return super.toString() + "[TimeListener = " + listeners + ']';
+        }
+
+    }
+
+    /**
+     * The single instance of the NopTimeController.
+     */
     private static final TimeController NOP_TIME_CONTROLLER
             = new NopTimeController();
 
@@ -95,7 +146,7 @@ public final class TimeControllers {
      * @see TimeControllerImpl
      */
     public static TimeController getInstance() {
-        return TimeControllerImpl.newInstance();
+        return new TimeControllerImpl();
     }
 
 }

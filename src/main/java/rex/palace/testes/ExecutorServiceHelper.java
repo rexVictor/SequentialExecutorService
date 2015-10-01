@@ -24,11 +24,12 @@
 package rex.palace.testes;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 /**
- * A utility class for thee SequentialExecutorService.
+ * A utility class for the SequentialExecutorService.
  */
 final class ExecutorServiceHelper {
 
@@ -40,12 +41,13 @@ final class ExecutorServiceHelper {
     }
 
     /**
-     * Converts the Runnable to a Callable with specific result.
+     * Converts the specified {@link Runnable} to a {@link Callable} returning
+     * the specified result.
      *
-     * @param runnable the runnable to convert
-     * @param result the result the callable shall return
+     * @param runnable the Runnable to convert
+     * @param result the result the returned Callable shall return
      * @param <T> the type of result
-     * @return a callable calling runnable and returning result
+     * @return a Callable calling runnable and returning result
      */
     static <T> Callable<T> convert(Runnable runnable, T result) {
         return () -> {
@@ -55,9 +57,12 @@ final class ExecutorServiceHelper {
     }
 
     /**
-     * Checks if future terminated regularly.
-     * @param future the future to test for regularly completion.
-     * @return false if and only if calling get() on future results in an exception.
+     * Checks if the specified {@link Future} terminated regularly, e.g.
+     * without throwing an Exception.
+     *
+     * @param future the Future to test for regularly completion.
+     * @return false if and only if calling {@link Future#get()} throws an
+     *         exception.
      */
     static boolean isRegularlyDone(Future<?> future) {
         try {
@@ -66,6 +71,26 @@ final class ExecutorServiceHelper {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Throws a CancellationException with a message.
+     *
+     * @throws CancellationException always
+     */
+    static void throwCancellationException() {
+        throw new CancellationException("Task was cancelled.");
+    }
+
+    /**
+     * Throws an InterruptedException with a message, suited for interruptions
+     * in {@link Future#get()}.
+     *
+     * @throws InterruptedException always
+     */
+    static void throwInterruptedGetException() throws InterruptedException {
+        throw new InterruptedException(
+                "Interrupted before the result was ready.");
     }
 
 }

@@ -35,7 +35,7 @@ import java.util.concurrent.TimeoutException;
  * @param <T> the type this future holds.
  */
 abstract class AbstractSequentialScheduledFuture<T>
-        extends AbstractSequentialFuture<T>
+        extends SequentialFutures.AbstractSequentialFuture<T>
         implements SequentialScheduledFuture<T> {
 
     /**
