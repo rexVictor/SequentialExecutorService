@@ -27,6 +27,8 @@ import org.testng.annotations.Test;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Tests the NeverDoneFuture class.
@@ -39,10 +41,17 @@ public class NeverDoneFutureTest {
     public NeverDoneFutureTest() {
     }
 
-    @Test(timeOut = 1000L)
+    @Test(expectedExceptions = IllegalStateException.class)
     public void get() throws ExecutionException, InterruptedException {
         Future<Void> future = SequentialFutures.getNeverDone(() -> null);
         future.get();
+    }
+
+    @Test(expectedExceptions = TimeoutException.class)
+    public void get_timed()
+            throws InterruptedException, ExecutionException, TimeoutException {
+        Future<Void> future = SequentialFutures.getNeverDone(() -> null);
+        future.get(10L, TimeUnit.MICROSECONDS);
     }
 
 }

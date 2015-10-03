@@ -24,6 +24,7 @@
 package rex.palace.testes;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -80,21 +81,20 @@ abstract class AbstractSequentialFuture<T> implements SequentialFuture<T> {
      * @throws ExecutionException if this task threw an Exception
      * @throws InterruptedException if this task is not cancelled and
      *         the current Thread is interrupted
-     * @throws java.util.concurrent.CancellationException if
-     *         this task got cancelled.
+     * @throws CancellationException if this task got cancelled.
      */
     @Override
     public T get() throws ExecutionException, InterruptedException {
         if (cancelled) {
-            ExecutorServiceHelper.throwCancellationException();
+            throw new CancellationException(
+                    ExecutorServiceHelper.CANCELLATION_MESSAGE);
         }
         if (Thread.currentThread().isInterrupted()) {
-            ExecutorServiceHelper.throwInterruptedGetException();
+            throw new InterruptedException(
+                    ExecutorServiceHelper.INTERUPPTED_MESSAGE);
         }
         if (!hasRun()) {
-            while (!Thread.currentThread().isInterrupted()) {
-                Thread.sleep(1L);
-            }
+            throw new IllegalStateException("Task has not run yet.");
         }
         if (exception == null) {
             return result;
@@ -153,9 +153,9 @@ abstract class AbstractSequentialFuture<T> implements SequentialFuture<T> {
      * @return a String representation of the relevant fields
      */
     protected String toStringHelper() {
-        StringBuilder sb = new StringBuilder("task = ")
+        StringBuilder sb = new StringBuilder("task=")
                 .append(wrapper)
-                .append(", state = ");
+                .append(",state=");
         if (cancelled) {
             sb.append("cancelled");
         } else if (isDone()) {
@@ -174,7 +174,7 @@ abstract class AbstractSequentialFuture<T> implements SequentialFuture<T> {
 
     @Override
     public String toString() {
-        return "SequentialFuture [" + toStringHelper() + ']';
+        return "SequentialFuture[" + toStringHelper() + ']';
     }
 
 }

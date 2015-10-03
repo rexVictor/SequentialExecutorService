@@ -24,7 +24,6 @@
 package rex.palace.testes;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -32,6 +31,11 @@ import java.util.concurrent.Future;
  * A utility class for the SequentialExecutorService.
  */
 final class ExecutorServiceHelper {
+
+    static final String CANCELLATION_MESSAGE = "Task was cancelled.";
+
+    static final String INTERUPPTED_MESSAGE
+            = "Interrupted before the result was ready.";
 
     /**
      * Empty constructor since this is a utility class.
@@ -71,26 +75,6 @@ final class ExecutorServiceHelper {
             return false;
         }
         return true;
-    }
-
-    /**
-     * Throws a CancellationException with a message.
-     *
-     * @throws CancellationException always
-     */
-    static void throwCancellationException() {
-        throw new CancellationException("Task was cancelled.");
-    }
-
-    /**
-     * Throws an InterruptedException with a message, suited for interruptions
-     * in {@link Future#get()}.
-     *
-     * @throws InterruptedException always
-     */
-    static void throwInterruptedGetException() throws InterruptedException {
-        throw new InterruptedException(
-                "Interrupted before the result was ready.");
     }
 
 }

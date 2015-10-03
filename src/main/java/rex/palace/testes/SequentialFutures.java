@@ -94,10 +94,6 @@ final class SequentialFutures {
      *         interrupted.
      *     </li>
      *     <li>
-     *         When called with false,
-     *         {@link #cancel(boolean)} returns always false.
-     *     </li>
-     *     <li>
      *         {@link #isDone()} returns the same as {@link #isCancelled()}.
      *     </li>
      *     <li>
@@ -123,19 +119,13 @@ final class SequentialFutures {
             super(callable);
         }
 
-        @Override
-        public boolean cancel(boolean mayInterruptIfRunning) {
-            if (mayInterruptIfRunning) {
-                return super.cancel(true);
-            }
-            return false;
-        }
-
     }
 
     /**
      * This is a {@link java.util.concurrent.RunnableFuture}, which will
      * perform its associated tash when {@link #get()} is called.
+     *
+     * <p>{@link #get(long, TimeUnit)} simply delegates to {@code get()}.
      *
      * <p>Because the associated task finished "just in time",
      * the following applies:
@@ -144,10 +134,6 @@ final class SequentialFutures {
      *         If this task was not cancelled and
      *         {@link #get()} was called, the same things apply as in
      *         {@link ImmediatelyFuture}.
-     *     </li>
-     *     <li>
-     *         When called with false,
-     *         {@link #cancel(boolean)} returns always false.
      *     </li>
      *     <li>
      *         If {@link #get()} has not been called,
@@ -163,7 +149,8 @@ final class SequentialFutures {
         /**
          * Constructs a new OnCallFuture with the specified task.
          *
-         * @param callable the {@link Callable} to run when get() is called.
+         * @param callable the {@link Callable} to run when {@link #get()}
+         *                 is called.
          * @throws NullPointerException if callable is null
          */
         private OnCallFuture(Callable<T> callable) {
@@ -171,21 +158,15 @@ final class SequentialFutures {
         }
 
         @Override
-        public boolean cancel(boolean mayInterruptIfRunning) {
-            if (mayInterruptIfRunning) {
-                return super.cancel(true);
-            }
-            return false;
-        }
-
-        @Override
         public T get() throws ExecutionException, InterruptedException {
-            run();
+            if (!hasRun()) {
+                run();
+            }
             return super.get();
         }
 
         @Override
-        public T get(long timeout, TimeUnit timeUnit)
+        public T get(long timeout, TimeUnit unit)
                 throws ExecutionException, InterruptedException {
             return get();
         }

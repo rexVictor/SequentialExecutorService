@@ -24,18 +24,16 @@
 package rex.palace.testes;
 
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import rex.palace.testhelp.TestThread;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeoutException;
 
 /**
  * Tests the ImmediatelyFuture class.
  */
-public class ImmediatelyFutureTest {
+public class ImmediatelyFutureTest extends SequentialFutureTest {
 
     /**
      * A null returning callable.
@@ -46,38 +44,22 @@ public class ImmediatelyFutureTest {
      * Empty constructor.
      */
     public ImmediatelyFutureTest(){
+        super();
     }
 
-    @Test(expectedExceptions = NullPointerException.class)
-    public void new_nullCallable() {
-        SequentialFutures.getImmediately(null);
+    @DataProvider(name = "booleans")
+    public Object[][] getBooleans() {
+        return new Object[][]{
+                {true},
+                {false}
+        };
     }
 
-    @Test
-    public void cancel_true() {
+    @Test(dataProvider = "booleans")
+    public void cancel(boolean mayInterrupt) {
         Future<?> future = SequentialFutures.getImmediately(callable);
         Assert.assertFalse(future.isCancelled());
-        Assert.assertFalse(future.cancel(true));
-    }
-
-    @Test
-    public void cancel_false() throws InterruptedException, ExecutionException, TimeoutException {
-        Future<?> future = SequentialFutures.getImmediately(callable);
-        Assert.assertFalse(future.isCancelled());
-        Assert.assertFalse(future.cancel(false));
-        Assert.assertSame(future.get(1L, null), null);
-    }
-
-    @Test(expectedExceptions = InterruptedException.class)
-    public void get_interrupted() throws Exception {
-        Future<Void> future = SequentialFutures.getImmediately(() -> null);
-        TestThread thread = new TestThread(() -> {
-            Thread.currentThread().interrupt();
-            return future.get();
-        });
-        thread.start();
-        thread.join();
-        thread.finish();
+        Assert.assertFalse(future.cancel(mayInterrupt));
     }
 
 }

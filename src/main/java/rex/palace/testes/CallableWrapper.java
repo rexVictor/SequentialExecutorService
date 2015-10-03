@@ -25,12 +25,14 @@ package rex.palace.testes;
 
 import java.util.Objects;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 
 /**
  * A {@link Runnable} implementation wrapping a {@link Callable} for a
  * {@link SequentialFuture}.
  *
  * @param <T> the result type of the wrapped Callable
+ * @see #run()
  */
 class CallableWrapper<T> implements Runnable {
 
@@ -67,13 +69,13 @@ class CallableWrapper<T> implements Runnable {
      * calls the callback commands of sequentialFuture when the result is ready
      * or an exception occurred.
      *
-     * @throws java.util.concurrent.CancellationException if sequentialFuture
-     *         is cancelled
+     * @throws CancellationException if sequentialFuture is cancelled
      */
     @Override
     public void run() {
         if (sequentialFuture.isCancelled()) {
-            ExecutorServiceHelper.throwCancellationException();
+            throw new CancellationException(
+                    ExecutorServiceHelper.CANCELLATION_MESSAGE);
         }
         try {
             T call = callable.call();
