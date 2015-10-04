@@ -21,33 +21,47 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package rex.palace.testes;
+package rex.palace.sequentialexecutor;
 
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import rex.palace.testhelp.ArgumentConverter;
-import rex.palace.testhelp.UtilityCheck;
 
-import java.util.Iterator;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 
 /**
- * Tests if classes are utility classes.
+ * Tests the ImmediatelyFuture class.
  */
-public class UtilityTest {
+public class ImmediatelyFutureTest extends SequentialFutureTest {
 
-    @DataProvider(name = "utilityClasses")
-    public Iterator<Object[]> getUtilityClasses() {
-        return ArgumentConverter.convert(
-                ExecutorServiceHelper.class,
-                SequentialFutures.class,
-                SequentialScheduledFutures.class,
-                TimeControllers.class);
+    /**
+     * A null returning callable.
+     */
+    private final Callable<?> callable = () -> null;
+
+    /**
+     * Empty constructor.
+     */
+    public ImmediatelyFutureTest(){
+        super();
     }
 
-    @Test(dataProvider = "utilityClasses")
-    public void testIfUtility(Class<?> clazz) {
-        Assert.assertTrue(UtilityCheck.isUtilityClass(clazz));
+    @DataProvider(name = "booleans")
+    public Object[][] getBooleans() {
+        return new Object[][]{
+                {true},
+                {false}
+        };
+    }
+
+    @Test(dataProvider = "booleans")
+    public void cancel(boolean mayInterrupt) {
+        Future<?> future = SequentialFutures.getImmediately(callable);
+        Assert.assertFalse(future.isCancelled());
+        Assert.assertFalse(future.cancel(mayInterrupt));
     }
 
 }
+
+/* vim:set shiftwidth=4 softtabstop=4 expandtab: */

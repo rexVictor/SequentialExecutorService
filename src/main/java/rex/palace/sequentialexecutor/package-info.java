@@ -37,24 +37,24 @@
  * interruptions, so that every scenario can be triggered and tested.
  *
  * <p>The classes concerning ExecutorService are
- * {@link rex.palace.testes.SequentialExecutorService} and
- * {@link rex.palace.testes.ExecutorServiceState}. The former
+ * {@link rex.palace.sequentialexecutor.SequentialExecutorService} and
+ * {@link rex.palace.sequentialexecutor.ExecutorServiceState}. The former
  * adds also a few methods which can be used for mocks. The latter is used
  * to simulate real conditions.
  *
  * <p>The classes concerning ScheduledExecutorService are
- * {@link rex.palace.testes.SequentialScheduledExecutorService} and
- * {@link rex.palace.testes.TimeController}. The former also has
+ * {@link rex.palace.sequentialexecutor.SequentialScheduledExecutorService} and
+ * {@link rex.palace.sequentialexecutor.TimeController}. The former also has
  * the mock methods. The latter is an Interface, for which instances
- * can be obtained by {@link rex.palace.testes.TimeControllers}, which
+ * can be obtained by {@link rex.palace.sequentialexecutor.TimeControllers}, which
  * simulates a real time flow deterministically.
  *
- * @see rex.palace.testes.SequentialExecutorService
- * @see rex.palace.testes.SequentialScheduledExecutorService
- * @see rex.palace.testes.TimeController
- * @see rex.palace.testes.TimeControllers
- * @see rex.palace.testes.ExecutorServiceState
+ * @see rex.palace.sequentialexecutor.SequentialExecutorService
+ * @see rex.palace.sequentialexecutor.SequentialScheduledExecutorService
+ * @see rex.palace.sequentialexecutor.TimeController
+ * @see rex.palace.sequentialexecutor.TimeControllers
+ * @see rex.palace.sequentialexecutor.ExecutorServiceState
  */
-package rex.palace.testes;
+package rex.palace.sequentialexecutor;
 
 /* vim:set shiftwidth=4 softtabstop=4 expandtab: */

@@ -21,7 +21,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package rex.palace.testes;
+package rex.palace.sequentialexecutor;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -140,7 +140,7 @@ public class TimeControllerTest {
     public void toString_test() {
         TimeController testController = TimeControllers.getInstance();
         Pattern pattern = Pattern.compile('^' +
-                timeController.getClass().getName().replaceAll("\\$","\\\\\\$") + "@[0-9a-fA-f]*"
+                timeController.getClass().getName().replaceAll("\\$", "\\\\\\$") + "@[0-9a-fA-f]*"
                 + "\\[TimeListener=\\[.*\\]\\]$");
 
         Matcher matcher = pattern.matcher(testController.toString());

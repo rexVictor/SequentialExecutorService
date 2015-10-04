@@ -21,7 +21,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package rex.palace.testes;
+package rex.palace.sequentialexecutor;
 
 import java.util.Collection;
 import java.util.List;

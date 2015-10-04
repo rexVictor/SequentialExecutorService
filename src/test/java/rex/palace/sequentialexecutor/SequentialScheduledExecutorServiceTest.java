@@ -21,7 +21,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package rex.palace.testes;
+package rex.palace.sequentialexecutor;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -80,7 +80,8 @@ public class SequentialScheduledExecutorServiceTest {
     @Test(expectedExceptions = RejectedExecutionException.class)
     public void schedule_Runnable_shutdown() {
         service.shutdown();
-        service.schedule(() -> { }, 10L, TimeUnit.NANOSECONDS);
+        service.schedule(() -> {
+        }, 10L, TimeUnit.NANOSECONDS);
     }
 
     @Test
@@ -109,7 +110,8 @@ public class SequentialScheduledExecutorServiceTest {
     @Test
     public void scheduleAtFixedRate_noDelay() {
         ScheduledFuture<?> future
-                = service.scheduleAtFixedRate(() -> { }, 0L,
+                = service.scheduleAtFixedRate(() -> {
+        }, 0L,
                 10L, TimeUnit.NANOSECONDS);
 
         Assert.assertEquals(future.getClass().getSimpleName(), "PeriodicSequentialFuture");

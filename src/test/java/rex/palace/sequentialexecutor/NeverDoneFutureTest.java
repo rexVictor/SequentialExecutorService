@@ -21,43 +21,39 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package rex.palace.testes;
+package rex.palace.sequentialexecutor;
 
 import org.testng.annotations.Test;
-import rex.palace.testes.TimeController;
-import rex.palace.testes.TimeControllers;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * Tests the NopTimeController class.
- *
- * <p>Since the NopTimeController does nothing, this class
- * only tests if any exception is thrown.
+ * Tests the NeverDoneFuture class.
  */
-public class NopTimeControllerTest {
+public class NeverDoneFutureTest {
 
     /**
-     * The singleton instance of NopTimeController.
+     * Empty constructor.
      */
-    private final TimeController nopTimeController = TimeControllers.getNop();
-
-    /**
-     * Empty Constructor.
-     */
-    public NopTimeControllerTest() {
-        super();
+    public NeverDoneFutureTest() {
     }
 
-    @Test
-    public void test_NoExceptions() throws TimeoutException {
-        nopTimeController.letTimePass(0L, TimeUnit.NANOSECONDS);
-        nopTimeController.letTimePassUntil(() -> true);
-        nopTimeController.letTimePassUntil(() -> true, 0L, TimeUnit.NANOSECONDS);
-        nopTimeController.register((time, unit) -> false);
-        nopTimeController.unregister((time, unit) -> false);
+    @Test(expectedExceptions = IllegalStateException.class)
+    public void get() throws ExecutionException, InterruptedException {
+        Future<Void> future = SequentialFutures.getNeverDone(() -> null);
+        future.get();
     }
+
+    @Test(expectedExceptions = TimeoutException.class)
+    public void get_timed()
+            throws InterruptedException, ExecutionException, TimeoutException {
+        Future<Void> future = SequentialFutures.getNeverDone(() -> null);
+        future.get(10L, TimeUnit.MICROSECONDS);
+    }
+
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 expandtab: */

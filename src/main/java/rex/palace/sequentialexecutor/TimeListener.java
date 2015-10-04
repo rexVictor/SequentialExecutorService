@@ -21,46 +21,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package rex.palace.testes;
+package rex.palace.sequentialexecutor;
 
-import org.testng.Assert;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
-
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
- * Tests the ImmediatelyFuture class.
+ * Classes implementing this interface can register to a {@link TimeController}
+ * and get notified if simulated time passed.
  */
-public class ImmediatelyFutureTest extends SequentialFutureTest {
+@FunctionalInterface
+public interface TimeListener {
 
     /**
-     * A null returning callable.
+     * Callback method when time passed.
+     *
+     * @param time the simulated amount of time that has passed
+     * @param unit the TimeUnit of time
+     * @return if this TimeListener shall be unregistered of the calling TimeController
+     * @throws NullPointerException if unit is null
+     * @throws java.util.ConcurrentModificationException if this TimeListener
+     *         tries to unregister from the calling TimeController via the
+     *         {@link TimeController#unregister(TimeListener)} method. The
+     *         correct way to unregister during the execution of this method,
+     *         is to simply return false. The TimeController will unregister
+     *         this listener then.
      */
-    private final Callable<?> callable = () -> null;
-
-    /**
-     * Empty constructor.
-     */
-    public ImmediatelyFutureTest(){
-        super();
-    }
-
-    @DataProvider(name = "booleans")
-    public Object[][] getBooleans() {
-        return new Object[][]{
-                {true},
-                {false}
-        };
-    }
-
-    @Test(dataProvider = "booleans")
-    public void cancel(boolean mayInterrupt) {
-        Future<?> future = SequentialFutures.getImmediately(callable);
-        Assert.assertFalse(future.isCancelled());
-        Assert.assertFalse(future.cancel(mayInterrupt));
-    }
+    boolean timePassed(long time, TimeUnit unit);
 
 }
 

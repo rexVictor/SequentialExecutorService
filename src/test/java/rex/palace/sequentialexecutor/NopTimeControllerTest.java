@@ -21,33 +21,41 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package rex.palace.testes;
+package rex.palace.sequentialexecutor;
+
+import org.testng.annotations.Test;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
- * Classes implementing this interface can register to a {@link TimeController}
- * and get notified if simulated time passed.
+ * Tests the NopTimeController class.
+ *
+ * <p>Since the NopTimeController does nothing, this class
+ * only tests if any exception is thrown.
  */
-@FunctionalInterface
-public interface TimeListener {
+public class NopTimeControllerTest {
 
     /**
-     * Callback method when time passed.
-     *
-     * @param time the simulated amount of time that has passed
-     * @param unit the TimeUnit of time
-     * @return if this TimeListener shall be unregistered of the calling TimeController
-     * @throws NullPointerException if unit is null
-     * @throws java.util.ConcurrentModificationException if this TimeListener
-     *         tries to unregister from the calling TimeController via the
-     *         {@link TimeController#unregister(TimeListener)} method. The
-     *         correct way to unregister during the execution of this method,
-     *         is to simply return false. The TimeController will unregister
-     *         this listener then.
+     * The singleton instance of NopTimeController.
      */
-    boolean timePassed(long time, TimeUnit unit);
+    private final TimeController nopTimeController = TimeControllers.getNop();
 
+    /**
+     * Empty Constructor.
+     */
+    public NopTimeControllerTest() {
+        super();
+    }
+
+    @Test
+    public void test_NoExceptions() throws TimeoutException {
+        nopTimeController.letTimePass(0L, TimeUnit.NANOSECONDS);
+        nopTimeController.letTimePassUntil(() -> true);
+        nopTimeController.letTimePassUntil(() -> true, 0L, TimeUnit.NANOSECONDS);
+        nopTimeController.register((time, unit) -> false);
+        nopTimeController.unregister((time, unit) -> false);
+    }
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 expandtab: */

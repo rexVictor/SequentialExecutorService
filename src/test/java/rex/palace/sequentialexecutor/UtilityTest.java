@@ -21,28 +21,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package rex.palace.testes;
+package rex.palace.sequentialexecutor;
 
-import java.util.Objects;
-import java.util.concurrent.Delayed;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import org.testng.Assert;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+import rex.palace.testhelp.ArgumentConverter;
+import rex.palace.testhelp.UtilityCheck;
+
+import java.util.Iterator;
 
 /**
- * A ScheduledFuture which does not run parallel.
- *
- * @param <T> the return type of this Future
+ * Tests if classes are utility classes.
  */
-interface SequentialScheduledFuture<T>
-        extends SequentialFuture<T>, ScheduledFuture<T>, TimeListener {
+public class UtilityTest {
 
-    @Override
-    default int compareTo(Delayed other) {
-        Objects.requireNonNull(other);
-        long diff = getDelay(TimeUnit.NANOSECONDS) - other.getDelay(TimeUnit.NANOSECONDS);
-        return (diff < 0L) ? -1 : ((diff > 0L) ? 1 : 0);
+    @DataProvider(name = "utilityClasses")
+    public Iterator<Object[]> getUtilityClasses() {
+        return ArgumentConverter.convert(
+                ExecutorServiceHelper.class,
+                SequentialFutures.class,
+                SequentialScheduledFutures.class,
+                TimeControllers.class);
+    }
+
+    @Test(dataProvider = "utilityClasses")
+    public void testIfUtility(Class<?> clazz) {
+        Assert.assertTrue(UtilityCheck.isUtilityClass(clazz));
     }
 
 }
-
-/* vim:set shiftwidth=4 softtabstop=4 expandtab: */
