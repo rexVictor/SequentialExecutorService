@@ -128,7 +128,7 @@ final class SequentialScheduledFutures {
 
         @Override
         protected String toStringHelper() {
-            return super.toStringHelper() + ", period = " + period;
+            return super.toStringHelper() + ",period=" + period;
         }
 
         @Override

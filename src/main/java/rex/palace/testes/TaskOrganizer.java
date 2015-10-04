@@ -37,15 +37,28 @@ import java.util.stream.Stream;
  */
 class TaskOrganizer {
 
+    /**
+     * The map where all tasks are put.
+     */
     private final Map<ExecutorServiceState, Collection<RunnableFuture<?>>>
-    tasks = new EnumMap<>(ExecutorServiceState.class);
+            tasks = new EnumMap<>(ExecutorServiceState.class);
 
+    /**
+     * Constructs a new TaskOrganizer.
+     */
     TaskOrganizer() {
         for (ExecutorServiceState state : ExecutorServiceState.values()) {
             tasks.put(state, new HashSet<>());
         }
     }
 
+    /**
+     * Adds a task to this Organizer.
+     * @param state the ExecutorServiceState to use
+     * @param callable the task to execute
+     * @param <T> the return type of callable
+     * @return a Future containing callable
+     */
     <T> Future<T> submit(
             ExecutorServiceState state, Callable<T> callable) {
         RunnableFuture<T> future = state.submit(callable);
@@ -59,7 +72,7 @@ class TaskOrganizer {
      *
      * @return a stream of all unfinished tasks.
      */
-    Stream<? extends Runnable> notFinishedTasks() {
+    Stream<Runnable> notFinishedTasks() {
         Stream<? extends Runnable> onCallDone
                 = tasks.get(ExecutorServiceState.ONCALL).stream()
                 .filter(runnableFuture -> !runnableFuture.isDone());
@@ -99,6 +112,10 @@ class TaskOrganizer {
         return (int) notFinishedTasks().count();
     }
 
+    /**
+     * Runs all tasks submitted in the
+     * {@link ExecutorServiceState#AWAIT_TERMINATION} state.
+     */
     void awaitTermination() {
         tasks.get(ExecutorServiceState.AWAIT_TERMINATION).stream()
                 .forEach(ExecutorServiceHelper::isRegularlyDone);

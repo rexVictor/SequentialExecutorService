@@ -139,9 +139,9 @@ public class TimeControllerTest {
     @Test
     public void toString_test() {
         TimeController testController = TimeControllers.getInstance();
-        Pattern pattern = Pattern.compile(
-                timeController.getClass().getName() + "@[0-9a-fA-f]*"
-                + "\\[TimeListener = .*\\]");
+        Pattern pattern = Pattern.compile('^' +
+                timeController.getClass().getName().replaceAll("\\$","\\\\\\$") + "@[0-9a-fA-f]*"
+                + "\\[TimeListener=\\[.*\\]\\]$");
 
         Matcher matcher = pattern.matcher(testController.toString());
 

@@ -28,7 +28,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.CancellationException;
-import java.util.concurrent.Delayed;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -39,34 +38,6 @@ import java.util.regex.Pattern;
  * Tests the DelayedSequentialFuture class.
  */
 public class DelayedSequentialFutureTest {
-
-    /**
-     * A stub implementation of Delayed.
-     */
-    private static class DelayedStub implements Delayed {
-
-        /**
-         * The current delay in nano seconds.
-         */
-        public long delayInNanos;
-
-        /**
-         * Creates a new DelayedStub.
-         */
-        DelayedStub() {
-            super();
-        }
-
-        @Override
-        public long getDelay(TimeUnit unit) {
-            return unit.convert(delayInNanos, TimeUnit.NANOSECONDS);
-        }
-
-        @Override
-        public int compareTo(Delayed other) {
-            throw new UnsupportedOperationException();
-        }
-    }
 
     /**
      * The TimeController usable by the tests.
@@ -95,14 +66,29 @@ public class DelayedSequentialFutureTest {
                 TimeUnit.MILLISECONDS, timeController);
     }
 
+    @Test(expectedExceptions = NullPointerException.class)
+    public void new_nullCallable() {
+        SequentialScheduledFutures.getDelayed(
+                null, 10L, TimeUnit.NANOSECONDS, timeController);
+    }
+
+    @Test(expectedExceptions = NullPointerException.class)
+    public void new_nullUnit() {
+        SequentialScheduledFutures.getDelayed(
+                () -> null, 10L, null, timeController);
+    }
+
+    @Test(expectedExceptions = NullPointerException.class)
+    public void new_nullController() {
+        SequentialScheduledFutures.getDelayed(
+                () -> null, 10L, TimeUnit.NANOSECONDS, null);
+    }
+
+
     @Test(expectedExceptions = CancellationException.class)
     public void cancel() {
-        Assert.assertFalse(future.isCancelled());
-        future.cancel(true);
-
-        Assert.assertTrue(future.isCancelled());
-        future.timePassed(10L, TimeUnit.MILLISECONDS);
-
+        SequentialScheduledFutureTests.cancel(
+                future, 10L, TimeUnit.MILLISECONDS);
     }
 
     @Test
@@ -121,25 +107,26 @@ public class DelayedSequentialFutureTest {
 
     @Test
     public void getDelay() {
-        Assert.assertEquals(future.getDelay(TimeUnit.MILLISECONDS), 10L);
-        future.timePassed(1L, TimeUnit.MILLISECONDS);
-        Assert.assertEquals(future.getDelay(TimeUnit.MILLISECONDS), 9L);
-        future.timePassed(5L, TimeUnit.MILLISECONDS);
-        Assert.assertEquals(future.getDelay(TimeUnit.MILLISECONDS), 4L);
+        SequentialScheduledFutureTests.getDelay(
+                future, 10L, 1L, TimeUnit.MILLISECONDS);
+        SequentialScheduledFutureTests.getDelay(
+                future, 9L, 3L, TimeUnit.MILLISECONDS);
+        SequentialScheduledFutureTests.getDelay(
+                future, 6L, 3L, TimeUnit.MILLISECONDS);
     }
 
     @Test
     public void compareTo() {
-        DelayedStub delayed = new DelayedStub();
-        delayed.delayInNanos = TimeUnit.MILLISECONDS.toNanos(5L);
-
-        Assert.assertEquals(future.compareTo(delayed), 1L);
+        SequentialScheduledFutureTests.compareTo(
+                future, 5L, TimeUnit.MILLISECONDS, 1);
 
         future.timePassed(5L, TimeUnit.MILLISECONDS);
-        Assert.assertEquals(future.compareTo(delayed), 0L);
+        SequentialScheduledFutureTests.compareTo(
+                future, 5L, TimeUnit.MILLISECONDS, 0);
 
         future.timePassed(1L, TimeUnit.MILLISECONDS);
-        Assert.assertEquals(future.compareTo(delayed), -1L);
+        SequentialScheduledFutureTests.compareTo(
+                future, 5L, TimeUnit.MILLISECONDS, -1);
     }
 
     @Test(expectedExceptions = NullPointerException.class)
@@ -151,23 +138,23 @@ public class DelayedSequentialFutureTest {
     public void get_limited() throws InterruptedException, ExecutionException, TimeoutException {
         SequentialScheduledFuture<Integer> integerFuture
                 = SequentialScheduledFutures.getDelayed(() -> 5,
-                10L, TimeUnit.MILLISECONDS, timeController);
-        Assert.assertEquals(integerFuture.get(11L, TimeUnit.MILLISECONDS), Integer.valueOf(5));
+                10L, TimeUnit.MICROSECONDS, timeController);
+        Assert.assertEquals(integerFuture.get(11L, TimeUnit.MICROSECONDS), Integer.valueOf(5));
     }
 
     @Test
     public void toString_running() {
         StringBuilder regexPattern = new StringBuilder();
         regexPattern.append("SequentialScheduledFuture\\[")
-                .append("TimeController = ")
+                .append("TimeController=")
                 .append(".*")
-                .append(", task = ")
+                .append(",task=")
                 .append(".*")
-                .append(", state = ")
+                .append(",state=")
                 .append("running")
-                .append(", remainingDelay = ")
+                .append(",remainingDelay=")
                 .append(".*")
-                .append(", initialDelay = ")
+                .append(",initialDelay=")
                 .append(".*")
                 .append("\\]");
         Pattern pattern

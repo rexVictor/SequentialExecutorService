@@ -26,6 +26,7 @@ package rex.palace.testes;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import rex.palace.testhelp.TestThread;
 
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
@@ -66,7 +67,7 @@ public class SequentialScheduledExecutorServiceTest {
     public void schedule_Callable() {
         ScheduledFuture<Void> future = service.schedule(() -> null, 10L, TimeUnit.NANOSECONDS);
 
-        //Assert.assertTrue(future instanceof SequentialScheduledFutures.DelayedSequentialFuture);
+        Assert.assertEquals(future.getClass().getSimpleName(), "DelayedSequentialFuture");
         Assert.assertEquals(future.getDelay(TimeUnit.NANOSECONDS), 10L);
     }
 
@@ -86,17 +87,18 @@ public class SequentialScheduledExecutorServiceTest {
     public void schedule_Runnable() {
         ScheduledFuture<?> future = service.schedule(() -> { } , 10L, TimeUnit.NANOSECONDS);
 
-        //Assert.assertTrue(future instanceof SequentialScheduledFutures.DelayedSequentialFuture);
+        Assert.assertEquals(future.getClass().getSimpleName(), "DelayedSequentialFuture");
         Assert.assertEquals(future.getDelay(TimeUnit.NANOSECONDS), 10L);
     }
 
     @Test
     public void scheduleAtFixedRate() {
         ScheduledFuture<?> future
-                = service.scheduleAtFixedRate(() -> { }, 5L,
+                = service.scheduleAtFixedRate(() -> {
+                }, 5L,
                 10L, TimeUnit.NANOSECONDS);
 
-        //Assert.assertTrue(future instanceof SequentialScheduledFutures.DelayedPeriodicSequentialFuture);
+        Assert.assertEquals(future.getClass().getSimpleName(), "DelayedPeriodicSequentialFuture");
         Assert.assertEquals(future.getDelay(TimeUnit.NANOSECONDS), 5L);
 
         timeController.letTimePass(5L, TimeUnit.NANOSECONDS);
@@ -110,19 +112,19 @@ public class SequentialScheduledExecutorServiceTest {
                 = service.scheduleAtFixedRate(() -> { }, 0L,
                 10L, TimeUnit.NANOSECONDS);
 
-        //Assert.assertFalse(future instanceof SequentialScheduledFutures.DelayedPeriodicSequentialFuture);
-        //Assert.assertTrue(future instanceof SequentialScheduledFutures.PeriodicSequentialFuture);
-        //Assert.assertEquals(future.getDelay(TimeUnit.NANOSECONDS), 10L);
+        Assert.assertEquals(future.getClass().getSimpleName(), "PeriodicSequentialFuture");
+        Assert.assertEquals(future.getDelay(TimeUnit.NANOSECONDS), 10L);
 
     }
 
     @Test
     public void scheduleWithFixedDelay() {
         ScheduledFuture<?> future
-                = service.scheduleWithFixedDelay(() -> { }, 5L,
+                = service.scheduleWithFixedDelay(() -> {
+                }, 5L,
                 10L, TimeUnit.NANOSECONDS);
 
-        //Assert.assertTrue(future instanceof SequentialScheduledFutures.DelayedPeriodicSequentialFuture);
+        Assert.assertEquals(future.getClass().getSimpleName(), "DelayedPeriodicSequentialFuture");
         Assert.assertEquals(future.getDelay(TimeUnit.NANOSECONDS), 5L);
 
         timeController.letTimePass(5L, TimeUnit.NANOSECONDS);
@@ -133,13 +135,68 @@ public class SequentialScheduledExecutorServiceTest {
     @Test(expectedExceptions = RejectedExecutionException.class)
     public void scheduleWithFixedDelay_shutdown() {
         service.shutdown();
-        service.scheduleWithFixedDelay(() -> { }, 5L, 10L, TimeUnit.NANOSECONDS);
+        service.scheduleWithFixedDelay(() -> {
+        }, 5L, 10L, TimeUnit.NANOSECONDS);
     }
 
     @Test(expectedExceptions = RejectedExecutionException.class)
     public void scheduleAtFixedRate_shutdown() {
         service.shutdown();
-        service.scheduleAtFixedRate(() -> { }, 5L, 10L, TimeUnit.NANOSECONDS);
+        service.scheduleAtFixedRate(() -> {
+        }, 5L, 10L, TimeUnit.NANOSECONDS);
+    }
+
+    @Test(expectedExceptions = InterruptedException.class)
+    public void awaitTermination_interrupted() throws Exception {
+        service.shutdown();
+        TestThread thread = new TestThread(() -> {
+            Thread.currentThread().interrupt();
+            return service.awaitTermination(10L, TimeUnit.MILLISECONDS);
+        });
+
+        thread.start();
+        thread.join();
+        thread.finish();
+    }
+
+    @Test
+    public void awaitTermination_notShutdown() throws InterruptedException {
+        Assert.assertFalse(service.awaitTermination(1L, TimeUnit.NANOSECONDS));
+    }
+
+    @Test
+    public void awaitTermination_scheduledTasks_inTime() throws InterruptedException {
+        service.schedule(() -> null, 10L, TimeUnit.NANOSECONDS);
+        service.shutdown();
+
+        Assert.assertTrue(service.awaitTermination(11L, TimeUnit.NANOSECONDS));
+    }
+
+    @Test
+    public void awaitTermination_scheduledTasks_tooLong() throws InterruptedException {
+        service.schedule(() -> null, 10L, TimeUnit.NANOSECONDS);
+        service.shutdown();
+
+        Assert.assertFalse(service.awaitTermination(5L, TimeUnit.NANOSECONDS));
+    }
+
+    @Test
+    public void shutdownNow_noLeftOverTasks() {
+        Assert.assertTrue(service.shutdownNow().isEmpty());
+    }
+
+    @Test
+    public void shutdownNow_noLeftOverTasks_scheduledTasks() {
+        service.schedule(() -> null, 5L, TimeUnit.NANOSECONDS);
+        timeController.letTimePass(6L, TimeUnit.NANOSECONDS);
+        Assert.assertTrue(service.shutdownNow().isEmpty());
+    }
+
+    @Test
+    public void shutdownNow_leftOverTasks() {
+        service.schedule(() -> null, 7L, TimeUnit.DAYS);
+        Assert.assertEquals(service.shutdownNow().size(), 1);
+
     }
 
 }

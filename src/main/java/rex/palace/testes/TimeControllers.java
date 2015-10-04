@@ -114,7 +114,7 @@ public final class TimeControllers {
 
         @Override
         public String toString() {
-            return super.toString() + "[TimeListener = " + listeners + ']';
+            return super.toString() + "[TimeListener=" + listeners + ']';
         }
 
     }

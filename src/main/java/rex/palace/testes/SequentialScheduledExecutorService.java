@@ -108,7 +108,7 @@ public class SequentialScheduledExecutorService
     @Override
     public boolean awaitTermination(long timeout, TimeUnit unit)
             throws InterruptedException {
-        if (isShutdown()) {
+        if (!isShutdown()) {
             return false;
         }
         if (Thread.currentThread().isInterrupted()) {

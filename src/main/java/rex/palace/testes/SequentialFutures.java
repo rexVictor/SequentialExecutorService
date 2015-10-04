@@ -26,7 +26,6 @@ package rex.palace.testes;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * Static factory class for SequentialFutures.
@@ -89,7 +88,8 @@ final class SequentialFutures {
      *     </li>
      *     <li>
      *         If this task was not cancelled {@link #get(long, TimeUnit)}
-     *         will immediately throw a {@link TimeoutException} or
+     *         will immediately throw a
+     *         {@link java.util.concurrent.TimeoutException} or
      *         an {@link InterruptedException} if the current Thread is
      *         interrupted.
      *     </li>

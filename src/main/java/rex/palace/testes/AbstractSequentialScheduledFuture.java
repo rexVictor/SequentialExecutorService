@@ -56,7 +56,7 @@ abstract class AbstractSequentialScheduledFuture<T>
     /**
      * Creates a new AbstractSequentialScheduledFuture.
      *
-     * @param callable the task to perform
+     * @param callable the task teo perform
      * @param delay the delay before this task is performed
      * @param unit the TimeUnit of delay
      * @param timeController the TimeController to be registered to.
@@ -143,15 +143,15 @@ abstract class AbstractSequentialScheduledFuture<T>
 
     @Override
     protected String toStringHelper() {
-        return "TimeController = " + timeController + ", "
+        return "TimeController=" + timeController + ','
                 + super.toStringHelper()
-                + ", remainingDelay = " + remainingDelay
-                + ", initialDelay = " + initialDelay;
+                + ",remainingDelay=" + remainingDelay
+                + ",initialDelay=" + initialDelay;
     }
 
     @Override
     public String toString() {
-        return "SequentialScheduledFuture" + "[" + toStringHelper() + "]";
+        return "SequentialScheduledFuture[" + toStringHelper() + ']';
     }
 
 }

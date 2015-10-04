@@ -32,8 +32,15 @@ import java.util.concurrent.Future;
  */
 final class ExecutorServiceHelper {
 
+    /**
+     * The Exception message for a
+     * {@link java.util.concurrent.CancellationException}.
+     */
     static final String CANCELLATION_MESSAGE = "Task was cancelled.";
 
+    /**
+     * The Exception message for a {@link InterruptedException}.
+     */
     static final String INTERUPPTED_MESSAGE
             = "Interrupted before the result was ready.";
 

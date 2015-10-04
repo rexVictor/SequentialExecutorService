@@ -28,13 +28,14 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import rex.palace.testhelp.ArgumentConverter;
+import rex.palace.testhelp.CallCounter;
 
 import java.io.FileNotFoundException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.util.Iterator;
-import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -52,45 +53,6 @@ public class PeriodicSequentialFutureTest {
      */
     private static final String RESET_FUTURE = "resetFuture";
 
-    /**
-     * Counts how often call() got called or
-     * throws an Exception if exception is not null.
-     */
-    private static class CallCounter implements Callable<Void> {
-
-        /**
-         * How often call() got called.
-         */
-        public int callCount = 0;
-
-        /**
-         * The exception to throw.
-         */
-        public Exception exception = null;
-
-        /**
-         * Creates a new CallCounter.
-         */
-        CallCounter() {
-            super();
-        }
-
-        /**
-         * Throws an Exception if exception is not null and
-         * increments callCount otherwise.
-         *
-         * @return null
-         * @throws Exception if exception is not null
-         */
-        @Override
-        public Void call() throws Exception {
-            if (exception != null) {
-                throw exception;
-            }
-            callCount++;
-            return null;
-        }
-    }
 
     /**
      * A Mock instance of a TimeController.
@@ -133,7 +95,7 @@ public class PeriodicSequentialFutureTest {
     /**
      * The PeriodicSequentialFuture to run tests on.
      */
-    private SequentialScheduledFuture<Void> future;
+    private SequentialScheduledFuture<Integer> future;
 
     /**
      * The timeController future is registered to.
@@ -177,7 +139,7 @@ public class PeriodicSequentialFutureTest {
     public void basicAssertions() {
         Assert.assertFalse(future.isCancelled());
         Assert.assertFalse(future.isDone());
-        Assert.assertEquals(callCounter.callCount, 0);
+        Assert.assertEquals(callCounter.getCallCount(), 0);
     }
 
     @Test(expectedExceptions = NullPointerException.class)
@@ -219,7 +181,7 @@ public class PeriodicSequentialFutureTest {
     public void normalRun() {
         timeController.letTimePass(100L, TimeUnit.NANOSECONDS);
 
-        Assert.assertEquals(callCounter.callCount, 10);
+        Assert.assertEquals(callCounter.getCallCount(), 10);
         Assert.assertFalse(future.isDone());
         Assert.assertFalse(future.isCancelled());
     }
@@ -227,16 +189,16 @@ public class PeriodicSequentialFutureTest {
     @Test
     public void exceptionalRun() {
         timeController.letTimePass(100L, TimeUnit.NANOSECONDS);
-        Assert.assertEquals(callCounter.callCount, 10);
-        callCounter.exception = new FileNotFoundException();
+        Assert.assertEquals(callCounter.getCallCount(), 10);
+        callCounter.setException(new FileNotFoundException());
         timeController.letTimePass(10L, TimeUnit.NANOSECONDS);
 
-        Assert.assertEquals(callCounter.callCount, 10);
+        Assert.assertEquals(callCounter.getCallCount(), 10);
         Assert.assertTrue(future.isDone());
         Assert.assertFalse(future.isCancelled());
 
         timeController.letTimePass(100L, TimeUnit.NANOSECONDS);
-        Assert.assertEquals(callCounter.callCount, 10);
+        Assert.assertEquals(callCounter.getCallCount(), 10);
 
     }
 
@@ -260,7 +222,7 @@ public class PeriodicSequentialFutureTest {
     public void reset_notIfCancelledAndExceptional()
             throws NoSuchMethodException, InvocationTargetException,
             IllegalAccessException {
-        callCounter.exception = new MalformedURLException();
+        callCounter.setException(new MalformedURLException());
         timeController.letTimePass(11L, TimeUnit.NANOSECONDS);
         Assert.assertEquals(future.getDelay(TimeUnit.NANOSECONDS), -1L);
 
@@ -273,21 +235,15 @@ public class PeriodicSequentialFutureTest {
         Assert.assertEquals(future.getDelay(TimeUnit.NANOSECONDS), -1L);
     }
 
-    @Test
+    @Test(expectedExceptions = CancellationException.class)
     public void cancel() {
-        Assert.assertTrue(future.cancel(true));
-        Assert.assertTrue(future.isCancelled());
-
-        timeController.letTimePass(100L, TimeUnit.MILLISECONDS);
-
-        Assert.assertEquals(callCounter.callCount, 0);
-
-        Assert.assertFalse(future.cancel(true));
+        SequentialScheduledFutureTests.cancel(
+                future, 100L, TimeUnit.MILLISECONDS);
     }
 
     @Test
     public void cancel_AfterException() {
-        callCounter.exception = new ClassCastException();
+        callCounter.setException(new ClassCastException());
         timeController.letTimePass(10L, TimeUnit.NANOSECONDS);
 
         Assert.assertFalse(future.cancel(true));
@@ -295,22 +251,16 @@ public class PeriodicSequentialFutureTest {
 
     @Test
     public void getDelay() {
-        Assert.assertEquals(future.getDelay(TimeUnit.NANOSECONDS), 10L);
-        timeController.letTimePass(9L, TimeUnit.NANOSECONDS);
-
-        Assert.assertEquals(future.getDelay(TimeUnit.NANOSECONDS), 1L);
-
-        timeController.letTimePass(11L, TimeUnit.NANOSECONDS);
-
-        Assert.assertEquals(future.getDelay(TimeUnit.NANOSECONDS), 10L);
-
-        timeController.letTimePass(3L, TimeUnit.NANOSECONDS);
-        Assert.assertEquals(future.getDelay(TimeUnit.NANOSECONDS), 7L);
+        SequentialScheduledFutureTests.getDelay(
+                future, 10L, 9L, TimeUnit.NANOSECONDS);
+        future.timePassed(11L, TimeUnit.NANOSECONDS);
+        SequentialScheduledFutureTests.getDelay(
+                future, 10L, 3L, TimeUnit.NANOSECONDS);
     }
 
     @Test(expectedExceptions = MalformedURLException.class, timeOut = 1000L)
     public void get() throws Throwable {
-        callCounter.exception = new MalformedURLException();
+        callCounter.setException(new MalformedURLException());
         try {
             future.get();
         } catch (ExecutionException e) {
@@ -320,13 +270,13 @@ public class PeriodicSequentialFutureTest {
 
     @Test(expectedExceptions = TimeoutException.class, timeOut = 1000L)
     public void get_TimeOut() throws InterruptedException, ExecutionException, TimeoutException {
-        callCounter.exception = new MalformedURLException();
+        callCounter.setException(new MalformedURLException());
         future.get(9L, TimeUnit.NANOSECONDS);
     }
 
     @Test(expectedExceptions = MalformedURLException.class, timeOut = 1000L)
     public void get_limited() throws Throwable {
-        callCounter.exception = new MalformedURLException();
+        callCounter.setException(new MalformedURLException());
         try {
             future.get(10L, TimeUnit.NANOSECONDS);
         } catch (ExecutionException e) {
@@ -338,17 +288,17 @@ public class PeriodicSequentialFutureTest {
     public void toString_running() {
         StringBuilder regexPattern = new StringBuilder();
         regexPattern.append("PeriodicSequentialFuture\\[")
-                .append("TimeController = ")
+                .append("TimeController=")
                 .append(".*")
-                .append(", task = ")
+                .append(",task=")
                 .append(".*")
-                .append(", state = ")
+                .append(",state=")
                 .append("running")
-                .append(", remainingDelay = ")
+                .append(",remainingDelay=")
                 .append(".*")
-                .append(", initialDelay = ")
+                .append(",initialDelay=")
                 .append(".*")
-                .append(", period =")
+                .append(",period=")
                 .append(".*")
                 .append("\\]");
         Pattern pattern
@@ -359,6 +309,8 @@ public class PeriodicSequentialFutureTest {
                 () -> null, 10L, TimeUnit.NANOSECONDS, TimeControllers.getNop());
 
         Matcher matcher = pattern.matcher(future.toString());
+
+        System.out.println(future.toString());
 
         Assert.assertTrue(matcher.matches());
     }

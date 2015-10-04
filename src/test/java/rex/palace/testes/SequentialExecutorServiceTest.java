@@ -304,6 +304,12 @@ public class SequentialExecutorServiceTest {
     }
 
     @Test
+    public void isTerminated_shutdown_empty() {
+        executorService.shutdown();
+        Assert.assertTrue(executorService.isTerminated());
+    }
+
+    @Test
     public void toString_shutdown() {
         executorService.shutdown();
         StringBuilder regexPattern = new StringBuilder();
